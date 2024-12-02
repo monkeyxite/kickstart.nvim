@@ -1,89 +1,3 @@
---[[
-
-=====================================================================
-==================== READ THIS BEFORE CONTINUING ====================
-=====================================================================
-========                                    .-----.          ========
-========         .----------------------.   | === |          ========
-========         |.-""""""""""""""""""-.|   |-----|          ========
-========         ||                    ||   | === |          ========
-========         ||   KICKSTART.NVIM   ||   |-----|          ========
-========         ||                    ||   | === |          ========
-========         ||                    ||   |-----|          ========
-========         ||:Tutor              ||   |:::::|          ========
-========         |'-..................-'|   |____o|          ========
-========         `"")----------------(""`   ___________      ========
-========        /::::::::::|  |::::::::::\  \ no mouse \     ========
-========       /:::========|  |==hjkl==:::\  \ required \    ========
-========      '""""""""""""'  '""""""""""""'  '""""""""""'   ========
-========                                                     ========
-=====================================================================
-=====================================================================
-
-What is Kickstart?
-
-  Kickstart.nvim is *not* a distribution.
-
-  Kickstart.nvim is a starting point for your own configuration.
-    The goal is that you can read every line of code, top-to-bottom, understand
-    what your configuration is doing, and modify it to suit your needs.
-
-    Once you've done that, you can start exploring, configuring and tinkering to
-    make Neovim your own! That might mean leaving Kickstart just the way it is for a while
-    or immediately breaking it into modular pieces. It's up to you!
-
-    If you don't know anything about Lua, I recommend taking some time to read through
-    a guide. One possible example which will only take 10-15 minutes:
-      - https://learnxinyminutes.com/docs/lua/
-
-    After understanding a bit more about Lua, you can use `:help lua-guide` as a
-    reference for how Neovim integrates Lua.
-    - :help lua-guide
-    - (or HTML version): https://neovim.io/doc/user/lua-guide.html
-
-Kickstart Guide:
-
-  TODO: The very first thing you should do is to run the command `:Tutor` in Neovim.
-
-    If you don't know what this means, type the following:
-      - <escape key>
-      - :
-      - Tutor
-      - <enter key>
-
-    (If you already know the Neovim basics, you can skip this step.)
-
-  Once you've completed that, you can continue working through **AND READING** the rest
-  of the kickstart init.lua.
-
-  Next, run AND READ `:help`.
-    This will open up a help window with some basic information
-    about reading, navigating and searching the builtin help documentation.
-
-    This should be the first place you go to look when you're stuck or confused
-    with something. It's one of my favorite Neovim features.
-
-    MOST IMPORTANTLY, we provide a keymap "<space>sh" to [s]earch the [h]elp documentation,
-    which is very useful when you're not exactly sure of what you're looking for.
-
-  I have left several `:help X` comments throughout the init.lua
-    These are hints about where to find more information about the relevant settings,
-    plugins or Neovim features used in Kickstart.
-
-   NOTE: Look for lines like this
-
-    Throughout the file. These are for you, the reader, to help you understand what is happening.
-    Feel free to delete them once you know what you're doing, but they should serve as a guide
-    for when you are first encountering a few different constructs in your Neovim config.
-
-If you experience any errors while trying to install kickstart, run `:checkhealth` for more info.
-
-I hope you enjoy your Neovim journey,
-- TJ
-
-P.S. You can delete this when you're done too. It's your config now! :)
---]]
-
 -- Set <space> as the leader key
 -- See `:help mapleader`
 --  NOTE: Must happen before plugins are loaded (otherwise wrong leader will be used)
@@ -91,7 +5,7 @@ vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
 -- Set to true if you have a Nerd Font installed and selected in the terminal
-vim.g.have_nerd_font = false
+vim.g.have_nerd_font = true
 
 -- [[ Setting options ]]
 -- See `:help vim.opt`
@@ -157,6 +71,8 @@ vim.opt.cursorline = true
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.opt.scrolloff = 10
 
+-- For bufferline
+vim.opt.termguicolors = true
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 
@@ -190,6 +106,11 @@ vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right win
 vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
+-- quarto quick add
+vim.keymap.set({ 'n', 'i' }, '<M-i>', '<esc>o```{python}<cr>```<esc>O', { desc = '[i]nsert python code chunk' })
+-- IPython Term
+vim.keymap.set({ 'n' }, '<leader>ci', ':split term://ipython<cr>', { desc = '[c]ode [i]python' })
+
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
 
@@ -201,6 +122,14 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
   callback = function()
     vim.highlight.on_yank()
+  end,
+})
+--clean linenum
+vim.api.nvim_create_autocmd('TermOpen', {
+  desc = 'remove linenum in Term',
+  group = vim.api.nvim_create_augroup('kickstart-termopen', { clear = true }),
+  callback = function()
+    vim.wo.number = false
   end,
 })
 
@@ -589,14 +518,14 @@ require('lazy').setup({
       })
 
       -- Change diagnostic symbols in the sign column (gutter)
-      -- if vim.g.have_nerd_font then
-      --   local signs = { ERROR = '', WARN = '', INFO = '', HINT = '' }
-      --   local diagnostic_signs = {}
-      --   for type, icon in pairs(signs) do
-      --     diagnostic_signs[vim.diagnostic.severity[type]] = icon
-      --   end
-      --   vim.diagnostic.config { signs = { text = diagnostic_signs } }
-      -- end
+      if vim.g.have_nerd_font then
+        local signs = { ERROR = '', WARN = '', INFO = '', HINT = '' }
+        local diagnostic_signs = {}
+        for type, icon in pairs(signs) do
+          diagnostic_signs[vim.diagnostic.severity[type]] = icon
+        end
+        vim.diagnostic.config { signs = { text = diagnostic_signs } }
+      end
 
       -- LSP servers and clients are able to communicate to each other what features they support.
       --  By default, Neovim doesn't support everything that is in the LSP specification.
@@ -604,6 +533,9 @@ require('lazy').setup({
       --  So, we create new capabilities with nvim cmp, and then broadcast that to the servers.
       local capabilities = vim.lsp.protocol.make_client_capabilities()
       capabilities = vim.tbl_deep_extend('force', capabilities, require('cmp_nvim_lsp').default_capabilities())
+
+      --fix the lagging
+      capabilities.workspace.didChangeWatchedFiles.dynamicRegistration = false
 
       -- Enable the following language servers
       --  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
@@ -617,7 +549,7 @@ require('lazy').setup({
       local servers = {
         -- clangd = {},
         -- gopls = {},
-        -- pyright = {},
+        pyright = {},
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
@@ -826,6 +758,7 @@ require('lazy').setup({
             -- set group index to 0 to skip loading LuaLS completions as lazydev recommends it
             group_index = 0,
           },
+          { name = 'otter' },
           { name = 'nvim_lsp' },
           { name = 'luasnip' },
           { name = 'path' },
@@ -933,6 +866,162 @@ require('lazy').setup({
   -- require 'kickstart.plugins.autopairs',
   -- require 'kickstart.plugins.neo-tree',
   -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
+  -- quarto
+  {
+    'quarto-dev/quarto-nvim',
+    opts = {},
+    dependencies = {
+      -- for language features in code cells
+      -- configured in lua/plugins/lsp.lua and
+      -- added as a nvim-cmp source in lua/plugins/completion.lua
+      'jmbuhr/otter.nvim',
+    },
+  },
+  {
+    'jpalardy/vim-slime',
+    init = function()
+      vim.g.slime_target = 'neovim'
+      vim.g.slime_python_ipython = 1
+      vim.g.slime_dispatch_ipython_pause = 100
+      vim.g.slime_cell_delimiter = '#\\s\\=%%'
+      vim.cmd [[
+        function! _EscapeText_quarto(text)
+          if slime#config#resolve("python_ipython") && len(split(a:text,"\n")) > 1
+            return ["%cpaste -q\n", slime#config#resolve("dispatch_ipython_pause"), a:text, "--\n"]
+          else
+            let empty_lines_pat = '\(^\|\n\)\zs\(\s*\n\+\)\+'
+            let no_empty_lines = substitute(a:text, empty_lines_pat, "", "g")
+            let dedent_pat = '\(^\|\n\)\zs'.matchstr(no_empty_lines, '^\s*')
+            let dedented_lines = substitute(no_empty_lines, dedent_pat, "", "g")
+            let except_pat = '\(elif\|else\|except\|finally\)\@!'
+            let add_eol_pat = '\n\s[^\n]\+\n\zs\ze\('.except_pat.'\S\|$\)'
+            return substitute(dedented_lines, add_eol_pat, "\n", "g")
+          end
+        endfunction
+      ]]
+    end,
+    config = function()
+      vim.keymap.set({ 'n', 'i' }, '<M-cr>', function()
+        vim.cmd [[call slime#send_cell()]]
+      end, { desc = 'send code cell to term' })
+    end,
+  },
+  {
+    'sphamba/smear-cursor.nvim',
+    opts = {
+      -- Cursor color. Defaults to Normal gui foreground color
+      cursor_color = '#d3cdc3',
+
+      -- Background color. Defaults to Normal gui background color
+      normal_bg = '#282828',
+
+      -- Smear cursor when switching buffers
+      smear_between_buffers = true,
+
+      -- Smear cursor when moving within line or to neighbor lines
+      smear_between_neighbor_lines = true,
+
+      -- Use floating windows to display smears outside buffers.
+      -- May have performance issues with other plugins.
+      use_floating_windows = true,
+
+      -- Set to `true` if your font supports legacy computing symbols (block unicode symbols).
+      -- Smears will blend better on all backgrounds.
+      legacy_computing_symbols_support = false,
+
+      -- Attempt to hide the real cursor when smearing.
+      hide_target_hack = true,
+    },
+  },
+  --mail
+  {
+    'dbeniamine/vim-mail',
+    init = function()
+      vim.cmd "let g:VimMailContactsProvider=['khard']"
+      -- vim.cmd("set completefunc=vimmail#contacts#CompleteAddr")
+      vim.cmd "let g:VimMailClient='neomutt'"
+      vim.cmd "let g:VimMailSpellLangs=['en', 'se']"
+      vim.cmd "let g:VimMailFromList = [ 'Jonny Hou <jonny.hou@ericsson.com>', 'Jonny Hou <jonny.hou@gmail.com>', 'Jonny Hou <monkeyxite@gmail.com>' ]"
+    end,
+  },
+  --surround
+  {
+    'tpope/vim-surround',
+    keys = { 'c', 'd', 'y' },
+    -- make sure to change the value of `timeoutlen` if it's not triggering correctly, see https://github.com/tpope/vim-surround/issues/117
+    init = function()
+      vim.o.timeoutlen = 500
+    end,
+  },
+  {
+    'liuchengxu/graphviz.vim',
+  },
+  {
+    'weirongxu/plantuml-previewer.vim',
+    dependencies = { 'aklt/plantuml-syntax', 'tyru/open-browser.vim' },
+  },
+  {
+    'TimUntersberger/neogit',
+    dependencies = {
+      'nvim-lua/plenary.nvim', -- required
+      'sindrets/diffview.nvim', -- optional - Diff integration
+
+      -- Only one of these is needed.
+      'nvim-telescope/telescope.nvim', -- optional
+      'ibhagwan/fzf-lua', -- optional
+      'echasnovski/mini.pick', -- optional
+    },
+    config = true,
+  },
+  --markdown preview
+  {
+    'iamcco/markdown-preview.nvim',
+    ft = { 'markdown', 'quarto' },
+    cmd = { 'MarkdownPreviewToggle', 'MarkdownPreview', 'MarkdownPreviewStop' },
+    build = function()
+      vim.fn['mkdp#util#install']()
+    end,
+    config = function()
+      vim.g.mkdp_auto_start = 1
+      vim.g.mkdp_filetypes = { 'markdown', 'quarto' }
+    end,
+  },
+  --toggle term
+  {
+    url = 'https://git.sr.ht/~havi/telescope-toggleterm.nvim',
+    event = 'TermOpen',
+    dependencies = {
+      'akinsho/nvim-toggleterm.lua',
+      'nvim-telescope/telescope.nvim',
+      'nvim-lua/popup.nvim',
+      'nvim-lua/plenary.nvim',
+    },
+    config = function()
+      require('telescope').load_extension 'toggleterm'
+      require('telescope-toggleterm').setup {
+        telescope_mappings = {
+          -- <ctrl-c> : kill the terminal buffer (default) .
+          ['<C-c>'] = require('telescope-toggleterm').actions.exit_terminal,
+        },
+      }
+    end,
+  },
+  -- Comment handling
+  {
+    'numToStr/Comment.nvim',
+    opts = {
+      -- add any options here
+    },
+  },
+  -- using lazy.nvim
+  {
+    'akinsho/bufferline.nvim',
+    version = '*',
+    dependencies = 'nvim-tree/nvim-web-devicons',
+    config = function()
+      require('bufferline').setup {}
+    end,
+  },
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --    This is the easiest way to modularize your config.
