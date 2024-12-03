@@ -2,7 +2,7 @@
 -- See `:help mapleader`
 --  NOTE: Must happen before plugins are loaded (otherwise wrong leader will be used)
 vim.g.mapleader = ' '
-vim.g.maplocalleader = ' '
+vim.g.maplocalleader = ','
 
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = true
@@ -16,7 +16,7 @@ vim.g.have_nerd_font = true
 vim.opt.number = true
 -- You can also add relative line numbers, to help with jumping.
 --  Experiment for yourself to see if you like it!
--- vim.opt.relativenumber = true
+vim.opt.relativenumber = true
 
 -- Enable mouse mode, can be useful for resizing splits for example!
 vim.opt.mouse = 'a'
@@ -76,6 +76,11 @@ vim.opt.termguicolors = true
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 
+-- nvim-tree https://github.com/nvim-tree/nvim-tree.lua?tab=readme-ov-file
+-- disable netrw at the very start of your init.lua
+vim.g.loaded_netrw = 1
+vim.g.loaded_netrwPlugin = 1
+
 -- Clear highlights on search when pressing <Esc> in normal mode
 --  See `:help hlsearch`
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
@@ -105,6 +110,18 @@ vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left wind
 vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
 vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
+
+--bufferline
+vim.keymap.set('n', '<leader>bp', ':BufferLinePick<CR>', { noremap = true, desc = '[B]uffer[P]ick' })
+vim.keymap.set('n', '<leader>bj', ':BufferLineCycleNext<CR>', { noremap = true, desc = '[B]uffer[J]next' })
+vim.keymap.set('n', '<leader>bk', ':BufferLineCyclePrev<CR>', { noremap = true, desc = '[B]uffer[K]Previous' })
+vim.keymap.set('n', '<leader>bc', ':BufferLinePickClose<CR>', { noremap = true, desc = '[B]uffer[C]lose' })
+vim.keymap.set('n', '<leader>bco', ':BufferLineCloseOthers<CR>', { noremap = true, desc = '[B]uffer[C]lose[O]thers' })
+
+--dashboard
+vim.keymap.set('n', '<leader>;', ':lua MiniStarter.open()<CR>', { noremap = true, desc = 'Dashboard[;]' })
+--nvimtree toggle
+vim.keymap.set('n', '<leader>e', ':NvimTreeToggle<CR>', { noremap = true, desc = '[e]xplorer files' })
 
 -- quarto quick add
 vim.keymap.set({ 'n', 'i' }, '<M-i>', '<esc>o```{python}<cr>```<esc>O', { desc = '[i]nsert python code chunk' })
@@ -243,6 +260,7 @@ require('lazy').setup({
 
       -- Document existing key chains
       spec = {
+        { '<leader>b', group = '[B]uffer', mode = { 'n', 'x' } },
         { '<leader>c', group = '[C]ode', mode = { 'n', 'x' } },
         { '<leader>d', group = '[D]ocument' },
         { '<leader>r', group = '[R]ename' },
@@ -327,6 +345,7 @@ require('lazy').setup({
       -- Enable Telescope extensions if they are installed
       pcall(require('telescope').load_extension, 'fzf')
       pcall(require('telescope').load_extension, 'ui-select')
+      pcall(require('telescope').load_extension, 'projects')
 
       -- See `:help telescope.builtin`
       local builtin = require 'telescope.builtin'
@@ -337,6 +356,7 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
       vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
       vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
+      vim.keymap.set('n', '<leader>sp', builtin.resume, { desc = '[S]earch [P]rojects' })
       vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
       vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
       vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
@@ -778,13 +798,70 @@ require('lazy').setup({
       -- Load the colorscheme here.
       -- Like many other themes, this one has different styles, and you could load
       -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-      vim.cmd.colorscheme 'tokyonight-night'
+      vim.cmd.colorscheme 'tokyonight-moon'
 
       -- You can configure highlights by doing something like:
       vim.cmd.hi 'Comment gui=none'
     end,
   },
 
+  -- {
+  --   'catppuccin/nvim',
+  --   name = 'catppuccin',
+  --   priority = 1000,
+  --   config = function()
+  --     require('catppuccin').setup {
+  --       flavour = 'mocha', -- latte, frappe, macchiato, mocha
+  --       background = { -- :h background
+  --         light = 'latte',
+  --         dark = 'macchiato',
+  --       },
+  --       transparent_background = false, -- disables setting the background color.
+  --       show_end_of_buffer = false, -- shows the '~' characters after the end of buffers
+  --       term_colors = false, -- sets terminal colors (e.g. `g:terminal_color_0`)
+  --       dim_inactive = {
+  --         enabled = false, -- dims the background color of inactive window
+  --         shade = 'dark',
+  --         percentage = 0.15, -- percentage of the shade to apply to the inactive window
+  --       },
+  --       no_italic = false, -- Force no italic
+  --       no_bold = false, -- Force no bold
+  --       no_underline = false, -- Force no underline
+  --       styles = { -- Handles the styles of general hi groups (see `:h highlight-args`):
+  --         comments = { 'italic' }, -- Change the style of comments
+  --         conditionals = { 'italic' },
+  --         loops = {},
+  --         functions = {},
+  --         keywords = {},
+  --         strings = {},
+  --         variables = {},
+  --         numbers = {},
+  --         booleans = {},
+  --         properties = {},
+  --         types = {},
+  --         operators = {},
+  --       },
+  --       color_overrides = {},
+  --       custom_highlights = {},
+  --       integrations = {
+  --         cmp = true,
+  --         gitsigns = true,
+  --         nvimtree = true,
+  --         treesitter = true,
+  --         notify = true,
+  --         which_key = true,
+  --         neogit = true,
+  --         alpha = true,
+  --         -- For more plugins integrations please scroll down (https://github.com/catppuccin/nvim#integrations)
+  --         render_markdown = true,
+  --       },
+  --     }
+  --   end,
+  --   init = function()
+  --     vim.cmd.colorscheme 'catppuccin'
+  --     vim.cmd.hi 'Comment gui=none'
+  --   end,
+  -- },
   -- Highlight todo, notes, etc in comments
   { 'folke/todo-comments.nvim', event = 'VimEnter', dependencies = { 'nvim-lua/plenary.nvim' }, opts = { signs = false } },
 
@@ -821,7 +898,142 @@ require('lazy').setup({
         return '%2l:%-2v'
       end
 
-      -- ... and there is more!
+      -- files
+      require('mini.files').setup()
+      -- autopairs
+      require('mini.pairs').setup()
+      --startify
+      local stats = require('lazy').stats()
+      local starter = require 'mini.starter'
+      starter.setup {
+        items = {
+          starter.sections.sessions(10, true),
+          starter.sections.recent_files(10, false, true),
+          {
+            { name = 'Lazy', action = 'Lazy', section = 'Updaters' },
+            { name = 'Mason', action = 'Mason', section = 'Updaters' },
+          },
+          starter.sections.builtin_actions(),
+        },
+        content_hooks = {
+          starter.gen_hook.aligning('center', 'center'),
+          starter.gen_hook.adding_bullet '  ',
+        },
+        header = function()
+          --           local banner = [[
+          --       ████ ██████           █████     ██
+          --      ███████████             █████  █
+          --      █████████ ██████████████████ ███   ██████████
+          --     █████████  ███    █████████████ █████ █████████████
+          --    █████████ ██████████ █████████ █████ █████ ████ ████
+          --  ███████████ ███    ███ █████████ █████ █████ ████ ████
+          -- ██████  █████████████████████ ████ █████ █████ ████ █████]]
+          --           local banner = [[
+          -- ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣤⣤⣴⣶⣶⣶⣶⣶⣶⣶⣶⣶⣦⣤⣤⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+          -- ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⣴⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣶⣮⣉⠙⠳⢶⣤⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+          -- ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣴⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣄⠀⠀⠉⠻⢶⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+          -- ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣴⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣄⠀⠀⠀⠈⠛⢷⣤⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+          -- ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣆⠀⠀⠀⠀⠀⠙⠻⣦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+          -- ⠀⠀⠀⠀⠀⠀⠀⠀⢠⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣇⠀⠀⠀⠀⠀⠀⠈⠻⣦⣀⠀⠀⠀⠀⠀⠀⠀
+          -- ⠀⠀⠀⠀⠀⠀⢀⣴⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠿⠛⠉⠙⠻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡀⠀⠀⠀⠀⠀⠀⠀⠘⢿⣆⠀⠀⠀⠀⠀⠀
+          -- ⠀⠀⠀⠀⠀⣠⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠁⠀⠀⠀⠀⠀⠈⢻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠻⣧⠀⠀⠀⠀⠀
+          -- ⠀⠀⠀⠀⣰⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⢀⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠹⣿⠀⠀⠀⠀
+          -- ⠀⠀⠀⣰⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⡄⠀⠀⠀⠀⠀⢀⣼⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢹⣷⡀⠀⠀
+          -- ⠀⠀⢠⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣶⣤⣤⣤⣴⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⣧⠀⠀
+          -- ⠀⢀⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢹⡇⠀
+          -- ⠀⣸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⢿⠀
+          -- ⠀⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⡆
+          -- ⢰⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠛⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡇
+          -- ⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠛⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡇
+          -- ⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠿⠿⠟⠛⠛⠛⠛⠉⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡇
+          -- ⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠿⠛⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡇
+          -- ⠸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠛⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡇
+          -- ⠀⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠟⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠇
+          -- ⠀⢻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣼⠀
+          -- ⠀⠘⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣸⡇⠀
+          -- ⠀⠀⠸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣠⣤⣤⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⡟⠀⠀
+          -- ⠀⠀⠀⠻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣼⣿⣿⣿⣿⣿⣷⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⡿⠁⠀⠀
+          -- ⠀⠀⠀⠀⠹⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⡿⠁⠀⠀⠀
+          -- ⠀⠀⠀⠀⠀⠙⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⢿⣿⣿⣿⣿⣿⣿⡟⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣰⠟⠁⠀⠀⠀⠀
+          -- ⠀⠀⠀⠀⠀⠀⠈⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠛⠿⠿⠿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣶⠏⠀⠀⠀⠀⠀⠀
+          -- ⠀⠀⠀⠀⠀⠀⠀⠀⠙⢿⣿⣿⣿⣿⣿⣿⣿⣷⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⠟⠁⠀⠀⠀⠀⠀⠀⠀
+          -- ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠻⢿⣿⣿⣿⣿⣿⣿⣧⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀
+          -- ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⠿⣿⣿⣿⣿⣿⣷⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⡶⠛⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+          -- ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠙⠿⣿⣿⣿⣿⣦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⡶⠟⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+          -- ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⠛⠿⣿⣿⣷⣄⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣀⣤⠴⠟⠛⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+          -- ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⡀⡉⣛⡛⠻⠶⠦⠤⠤⠤⠤⠤⠤⠤⠤⠶⠖⠛⠛⠋⣁⠀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+          --           ]]
+          local banner = [[
+                                                          ████████████████████            
+                                                      ██▓▓▒▒▓▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▓▓          
+                        ▓▓▓▓██▓▓▓▓▓▓▓▓              ▓▓▒▒▒▒▓▓▒▒▓▓████████▒▒▓▓▒▒██          
+                      ██░░░░▒▒░░░░░░░░████        ██▒▒▒▒▒▒██▓▓▒▒▒▒░░░░░░████████          
+                    ██░░▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░██    ██▒▒▒▒▓▓██▒▒░░▒▒▒▒▒▒▒▒▒▒▒▒░░░░░░████      
+                    ██▒▒▒▒▒▒▓▓▒▒▒▒▒▒▒▒▓▓▒▒▒▒▓▓  ██▒▒▓▓██▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░▒▒▓▓▓▓  
+                  ██▒▒▓▓▒▒████████████▓▓▒▒▓▓▒▒██▒▒▓▓██▒▒▒▒▒▒▓▓▒▒▒▒▓▓▒▒▒▒▓▓▒▒▒▒▒▒▒▒▒▒░░██  
+                  ██▒▒████▒▒▒▒░░░░░░░░██████▓▓██▓▓▓▓██▓▓▒▒▒▒▓▓▒▒▒▒▓▓▒▒▒▒▓▓▒▒▓▓▒▒▒▒▒▒▒▒██  
+                  ████▒▒░░▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▓▓████▓▓██▓▓▓▓██████████████▒▒▓▓▒▒▓▓▒▒▓▓▒▒██    
+                  ██░░▒▒▒▒▒▒▒▒▒▒▓▓▒▒▒▒▒▒▒▒▓▓▓▓██▓▓██▓▓██▒▒▒▒▒▒▒▒░░░░▒▒████▒▒▓▓▒▒▓▓▒▒██    
+                ██░░▒▒▒▒▒▒▒▒▓▓▒▒▓▓▒▒▓▓▒▒▓▓▓▓██████████▒▒▓▓▒▒▒▒▓▓▒▒▒▒▒▒░░░░██▓▓▒▒▓▓▒▒██    
+                ██▒▒▒▒▒▒▓▓▒▒▓▓▒▒▓▓▒▒▓▓██████▒▒▓▓▓▓▓▓██▓▓▓▓▓▓▒▒▓▓▒▒▓▓▒▒▒▒▒▒░░██▒▒▓▓██      
+              ██▒▒▒▒▒▒▒▒▓▓▒▒▓▓▒▒▓▓████▒▒▒▒▓▓▒▒██████▓▓██████▒▒▓▓▒▒▓▓▒▒▒▒▒▒▒▒▒▒██▓▓██      
+              ██▒▒▒▒▓▓▒▒▓▓▒▒██████▒▒▒▒▓▓▒▒▒▒██▒▒▓▓▓▓██▓▓██  ████▒▒▓▓▒▒▓▓▒▒▒▒░░████        
+                ██▒▒▓▓▒▒▓▓██  ██▒▒▒▒▒▒▒▒▓▓██▒▒▓▓▒▒████▓▓██      ██▓▓▒▒▓▓▒▒▓▓▒▒██          
+                ██▒▒▓▓▒▒██  ██░░▒▒▒▒▒▒▒▒██▒▒▒▒▒▒▓▓██  ██▓▓██      ██▒▒▓▓▒▒▓▓▒▒██          
+                  ██▒▒██    ██░░▒▒▒▒▓▓▓▓██▒▒▓▓▒▒██      ██▒▒██    ██▒▒▓▓▒▒▓▓▒▒██          
+                    ████    ██░░▒▒▒▒▒▒▒▒██▒▒▒▒▓▓██      ██▒▒▓▓    ░░▓▓▓▓▒▒▓▓▒▒██          
+                          ▓▓▒▒▒▒▓▓▓▓▒▒▒▒██▒▒▒▒▒▒██        ██▒▒██      ██▒▒▓▓▒▒██          
+                          ██▒▒▒▒▒▒▒▒▓▓▓▓██▒▒▒▒▓▓▓▓██      ██▓▓██        ██▓▓▒▒██          
+                            ██▒▒▒▒▒▒▒▒▒▒██░░░░▒▒▒▒██        ██▒▒██        ██▒▒██          
+                            ██▒▒▒▒▓▓▓▓▓▓████████▒▒▒▒██      ██▒▒██        ████            
+                              ██▒▒▒▒▒▒▒▒▒▒██    ██████        ██▒▒██                      
+                                ████████████                  ██▒▒▒▒██                    
+                                                                ██▓▓██                    
+                                                                ██▒▒▒▒██                  
+                                                                  ▓▓▒▒██                  
+                                                                  ██▒▒▒▒▓▓                
+                                                                    ██▓▓▓▓██              
+                                                                    ██▒▒▒▒▒▒██            
+                                                      ████            ██▒▒▒▒██            
+                                                    ██░░██            ██▒▒▒▒▒▒██          
+                                                  ██▒▒██      ████      ██▓▓▓▓██          
+                                                ██▒▒░░▒▒██████░░██      ██▓▓▓▓▓▓██        
+                                              ▓▓▒▒░░░░░░▒▒██░░██          ██▓▓▒▒██        
+                                            ██▒▒  ▒▒░░▒▒██░░██            ██▒▒▒▒▒▒██      
+                                          ██▒▒  ▒▒  ▒▒██░░██              ██▒▒▒▒▒▒██      
+                                        ██▒▒  ▒▒  ▒▒██░░██                  ██▒▒▒▒▓▓██    
+                                      ██▒▒░░▒▒░░▒▒██░░██                    ██▓▓▓▓▓▓██    
+      ████████          ██████████████▒▒░░▒▒░░▒▒██░░██                      ██▓▓▓▓▒▒██    
+    ██  ░░  ░░██      ██▒▒  ▒▒▒▒▒▒░░  ████░░▒▒██░░██                        ██▒▒▒▒▒▒▒▒██  
+░░██░░░░░░    ░░██      ██▒▒░░░░░░▒▒▒▒░░░░████░░██                            ██▒▒▒▒▒▒██  
+░░██  ░░░░    ░░██        ██████████████████░░██                              ██▒▒▒▒▒▒██  
+▒▒██  ░░░░    ░░██        ░░██▒▒▒▒▒▒▒▒▒▒██░░▓▓▒▒██                            ██▒▒▓▓▓▓██  
+░░██  ░░░░    ░░██        ██░░██▓▓██████░░██  ██▒▒██                          ██▓▓▓▓▒▒▒▒██
+    ██  ░░  ░░██          ████      ██░░██      ██░░██                        ██▓▓▓▓▒▒▓▓██
+    ░░▓▓██▓▓▓▓░░            ░░    ██░░▓▓░░        ████                        ██▓▓▒▒▓▓▓▓██
+                                  ██▓▓                                        ██▓▓▓▓▓▓▓▓██
+                  ]]
+          return banner
+        end,
+        footer = 'loaded ' .. stats.count .. ' plugins ',
+      }
+      ---------------------------------------------------------------------
+      -- mini.sessions ----------------------------------------------------
+      -- TODO fix keymapping
+      ---------------------------------------------------------------------
+      require('mini.sessions').setup()
+      vim.keymap.set('n', ',oo', "<cmd>lua MiniSessions.select('read')<CR>", { desc = 'Open Session' })
+      vim.keymap.set('n', ',od', "<cmd>lua MiniSessions.select('delete')<CR>", { desc = 'Delete Session' })
+      vim.keymap.set('n', ',os', function()
+        local ok, res = pcall(vim.fn.input, {
+          prompt = 'Save session as: ',
+          cancelreturn = false,
+        })
+        if not ok or res == false then
+          return nil
+        end
+        MiniSessions.write(res)
+      end, { desc = 'Save Session' })
       --  Check out: https://github.com/echasnovski/mini.nvim
     end,
   },
@@ -934,6 +1146,7 @@ require('lazy').setup({
     },
   },
   --mail
+  -- TODO to fix ft for mail to enable keymapping of spelling/mail
   {
     'dbeniamine/vim-mail',
     init = function()
@@ -942,15 +1155,6 @@ require('lazy').setup({
       vim.cmd "let g:VimMailClient='neomutt'"
       vim.cmd "let g:VimMailSpellLangs=['en', 'se']"
       vim.cmd "let g:VimMailFromList = [ 'Jonny Hou <jonny.hou@ericsson.com>', 'Jonny Hou <jonny.hou@gmail.com>', 'Jonny Hou <monkeyxite@gmail.com>' ]"
-    end,
-  },
-  --surround
-  {
-    'tpope/vim-surround',
-    keys = { 'c', 'd', 'y' },
-    -- make sure to change the value of `timeoutlen` if it's not triggering correctly, see https://github.com/tpope/vim-surround/issues/117
-    init = function()
-      vim.o.timeoutlen = 500
     end,
   },
   {
@@ -1006,6 +1210,280 @@ require('lazy').setup({
       }
     end,
   },
+  --markdown
+  {
+    'MeanderingProgrammer/render-markdown.nvim',
+    ft = { 'markdown', 'quarto' },
+    opts = {},
+    dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' }, -- if you prefer nvim-web-devicons
+  },
+  {
+    'epwalsh/obsidian.nvim',
+    lazy = false,
+    -- enabled = true,
+    event = { 'BufReadPre  ' .. vim.fn.expand '~' .. 'knowledgebase/**.md' },
+    -- If you want to use the home shortcut '~' here you need to call 'vim.fn.expand':
+    -- event = { "BufReadPre " .. vim.fn.expand "~" .. "/my-vault/**.md" },
+    dependencies = {
+      -- Required.
+      'nvim-lua/plenary.nvim',
+
+      -- Optional, for completion.
+      'hrsh7th/nvim-cmp',
+
+      -- Optional, for search and quick-switch functionality.
+      'nvim-telescope/telescope.nvim',
+      'godlygeek/tabular',
+      'preservim/vim-markdown',
+    },
+    opts = {
+      workspaces = {
+        {
+          name = 'personal',
+          path = '~/knowledgebase',
+        },
+        {
+          name = 'work',
+          path = '~/OneDrive - Ericsson/Documents/Radio_KB',
+        },
+        {
+          name = 'asgard',
+          path = '/Users/ehoujin/Ericsson - Remote Radio Global Solution Team - VIPP - VIPP/Anatomy',
+        },
+      },
+      -- see below for full list of options 👇
+      --
+      -- https://github.com/Vinzent03/obsidian-advanced-uri
+      use_advanced_uri = true,
+
+      -- Optional, set to true to force ':ObsidianOpen' to bring the app to the foreground.
+      open_app_foreground = true,
+      --   -- Optional, key mappings.
+      mappings = {
+        -- Overrides the 'gf' mapping to work on markdown/wiki links within your vault.
+        -- ["fo"] = require("obsidian.mapping").gf_passthrough(),
+        -- ["gf"] = require("obsidian.mapping").gf_passthrough(),
+      },
+    },
+    config = function(_, opts)
+      require('obsidian').setup(opts)
+      -- Optional, override the 'gf' keymap to utilize Obsidian's search functionality.
+      -- see also: 'follow_url_func' config option below.
+    end,
+  },
+  {
+    'vhyrro/luarocks.nvim',
+    priority = 60,
+    opts = {
+      rocks = { 'magick' },
+    },
+  },
+  {
+    '3rd/image.nvim',
+    event = 'VimEnter', -- Sets the loading event to 'VimEnter'
+    config = function()
+      -- -- default config
+      require('image').setup {
+        backend = 'kitty',
+        integrations = {
+          markdown = {
+            enabled = true,
+            clear_in_insert_mode = false,
+            download_remote_images = true,
+            only_render_image_at_cursor = true,
+            filetypes = { 'markdown', 'vimwiki', 'qmd' }, -- markdown extensions (ie. quarto) can go here
+            resolve_image_path = function(document_path, image_path, fallback)
+              local ob = require 'obsidian'
+              -- Format image path for Obsidian notes
+              local obc = ob.get_client()
+              local working_dir = obc.current_workspace.path.filename
+              if working_dir:find '3. Resource/assets/' then
+                return working_dir .. '/' .. image_path
+              end
+              -- Fallback to the default behavior
+              return fallback(document_path, image_path)
+            end,
+          },
+          neorg = {
+            enabled = true,
+            clear_in_insert_mode = false,
+            download_remote_images = true,
+            only_render_image_at_cursor = false,
+            filetypes = { 'norg' },
+          },
+          html = {
+            enabled = false,
+          },
+          css = {
+            enabled = false,
+          },
+        },
+        max_width = 100,
+        max_height = 12,
+        max_height_window_percentage = math.huge,
+        max_width_window_percentage = math.huge,
+        window_overlap_clear_enabled = true,
+        window_overlap_clear_ft_ignore = { 'cmp_menu', 'cmp_docs', '' },
+        editor_only_render_when_focused = false, -- auto show/hide images when the editor gains/looses focus
+        tmux_show_only_in_active_window = true, -- auto show/hide images in the correct Tmux window (needs visual-activity off)
+        hijack_file_patterns = { '*.png', '*.jpg', '*.jpeg', '*.gif', '*.webp', '*.avif' }, -- render image files as images when opened
+      }
+    end,
+    -- opts = {
+    --     init = function()
+    --     package.path = package.path .. ";" .. vim.fn.expand("$HOME") .. "/.luarocks/share/lua/5.1/magick/init.lua;"
+    --     package.path = package.path .. ";" .. vim.fn.expand("$HOME") .. "/.luarocks/share/lua/5.1/magick/?.lua;"
+    --     local ok, err = pcall(require, "magick")
+    --     if ok then
+    --       print("that worked")
+    --     else
+    --       print("that failed")
+    --     end
+    -- end,
+    -- },
+    version = '1.1.0', -- or comment out for latest
+  },
+  { 'benlubas/image-save.nvim', cmd = 'SaveImage' },
+  {
+    'benlubas/molten-nvim',
+    dependencies = { '3rd/image.nvim' },
+    version = '^1.0.0', -- use version <2.0.0 to avoid breaking changes
+    build = ':UpdateRemotePlugins',
+    init = function()
+      -- this is an example, not a default. Please see the readme for more configuration options
+      vim.g.molten_output_win_max_height = 12
+      vim.g.molten_image_provider = 'image.nvim'
+      -- vim.g.molten_use_border_highlights = true
+      -- vim.g.molten_virt_text_output = false
+
+      -- vim.g.molten_auto_init_behavior = 'init'
+      vim.g.molten_enter_output_behavior = 'open_and_enter'
+      -- vim.g.molten_output_win_max_height = 16
+      -- vim.g.molten_output_win_cover_gutter = false
+      -- vim.g.molten_output_win_border = 'single'
+      -- vim.g.molten_output_win_style = 'minimal'
+      -- vim.g.molten_auto_open_output = false
+      -- vim.g.molten_output_show_more = true
+      -- vim.g.molten_virt_text_max_lines = 16
+      -- vim.g.molten_wrap_output = true
+
+      vim.g.molten_auto_image_popup = true
+      -- add a few new things
+
+      -- don't change the mappings (unless it's related to your bug)
+      vim.keymap.set('n', '<localleader>mi', ':MoltenInit<CR>')
+      vim.keymap.set('n', '<localleader>ip', function()
+        local venv = os.getenv 'VIRTUAL_ENV'
+        if venv ~= nil then
+          -- in the form of /home/benlubas/.virtualenvs/VENV_NAME
+          venv = string.match(venv, '/.+/(.+)')
+          vim.cmd(('MoltenInit %s'):format(venv))
+        else
+          vim.cmd 'MoltenInit python3'
+        end
+      end, { desc = 'Initialize Molten for python3', silent = true })
+
+      vim.keymap.set('n', '<localleader>e', ':MoltenEvaluateOperator<CR>')
+      vim.keymap.set('n', '<localleader>rr', ':MoltenReevaluateCell<CR>')
+      vim.keymap.set('v', '<localleader>r', ':<C-u>MoltenEvaluateVisual<CR>gv')
+      vim.keymap.set('n', '<localleader>os', ':noautocmd MoltenEnterOutput<CR>')
+      vim.keymap.set('n', '<localleader>oh', ':MoltenHideOutput<CR>')
+      vim.keymap.set('n', '<localleader>md', ':MoltenDelete<CR>')
+    end,
+  },
+  -- SymbolOutline
+  {
+    'hedyhli/outline.nvim',
+    lazy = true,
+    cmd = { 'Outline', 'OutlineOpen' },
+    keys = { -- Example mapping to toggle outline
+      { '<leader>o', '<cmd>Outline<CR>', desc = 'Toggle outline' },
+    },
+    opts = {
+      -- Your setup opts here
+    },
+  },
+  --tree
+  {
+    'nvim-tree/nvim-tree.lua',
+    version = '*',
+    lazy = false,
+    dependencies = {
+      'nvim-tree/nvim-web-devicons',
+    },
+    config = function()
+      require('nvim-tree').setup {}
+    end,
+  },
+  --indent line
+  {
+    'lukas-reineke/indent-blankline.nvim',
+    main = 'ibl',
+    ---@module "ibl"
+    ---@type ibl.config
+    opts = {},
+    config = function()
+      local highlight = {
+        'RainbowRed',
+        'RainbowYellow',
+        'RainbowBlue',
+        'RainbowOrange',
+        'RainbowGreen',
+        'RainbowViolet',
+        'RainbowCyan',
+      }
+
+      local hooks = require 'ibl.hooks'
+      -- create the highlight groups in the highlight setup hook, so they are reset
+      -- every time the colorscheme changes
+      hooks.register(hooks.type.HIGHLIGHT_SETUP, function()
+        vim.api.nvim_set_hl(0, 'RainbowRed', { fg = '#E06C75' })
+        vim.api.nvim_set_hl(0, 'RainbowYellow', { fg = '#E5C07B' })
+        vim.api.nvim_set_hl(0, 'RainbowBlue', { fg = '#61AFEF' })
+        vim.api.nvim_set_hl(0, 'RainbowOrange', { fg = '#D19A66' })
+        vim.api.nvim_set_hl(0, 'RainbowGreen', { fg = '#98C379' })
+        vim.api.nvim_set_hl(0, 'RainbowViolet', { fg = '#C678DD' })
+        vim.api.nvim_set_hl(0, 'RainbowCyan', { fg = '#56B6C2' })
+      end)
+
+      require('ibl').setup { indent = { highlight = highlight } }
+    end,
+  },
+  {
+    'karb94/neoscroll.nvim',
+    event = 'WinScrolled',
+    config = function()
+      require('neoscroll').setup {
+        -- All these keys will be mapped to their corresponding default scrolling animation
+        mappings = { '<C-u>', '<C-d>', '<C-b>', '<C-f>', '<C-y>', '<C-e>', 'zt', 'zz', 'zb' },
+        hide_cursor = true, -- Hide cursor while scrolling
+        stop_eof = true, -- Stop at <EOF> when scrolling downwards
+        use_local_scrolloff = false, -- Use the local scope of scrolloff instead of the global scope
+        respect_scrolloff = false, -- Stop scrolling when the cursor reaches the scrolloff margin of the file
+        cursor_scrolls_alone = true, -- The cursor will keep on scrolling even if the window cannot scroll further
+        easing_function = nil, -- Default easing function
+        pre_hook = nil, -- Function to run before the scrolling animation starts
+        post_hook = nil, -- Function to run after the scrolling animation ends
+      }
+    end,
+  },
+  --project
+  {
+    'ahmedkhalf/project.nvim',
+    config = function()
+      require('project_nvim').setup {
+        -- your configuration comes here
+        -- or leave it empty to use the default settings
+        -- refer to the configuration section below
+        sync_root_with_cwd = true,
+        respect_buf_cwd = true,
+        update_focused_file = {
+          enable = true,
+          update_root = true,
+        },
+      }
+    end,
+  },
   -- Comment handling
   {
     'numToStr/Comment.nvim',
@@ -1018,9 +1496,15 @@ require('lazy').setup({
     'akinsho/bufferline.nvim',
     version = '*',
     dependencies = 'nvim-tree/nvim-web-devicons',
-    config = function()
-      require('bufferline').setup {}
-    end,
+    opts = {
+      options = {
+        separator_style = 'slant',
+        tab_size = 15,
+      },
+    },
+    -- config = function()
+    --   require('bufferline').setup {}
+    -- end,
   },
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
