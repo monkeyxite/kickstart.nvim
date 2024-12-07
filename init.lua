@@ -73,6 +73,10 @@ vim.opt.scrolloff = 10
 
 -- For bufferline
 vim.opt.termguicolors = true
+
+-- For Avante: views can only be fully collapsed with the global statusline
+vim.opt.laststatus = 3
+
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 
@@ -115,13 +119,15 @@ vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper win
 vim.keymap.set('n', '<leader>bp', ':BufferLinePick<CR>', { noremap = true, desc = '[B]uffer[P]ick' })
 vim.keymap.set('n', '<leader>bj', ':BufferLineCycleNext<CR>', { noremap = true, desc = '[B]uffer[J]next' })
 vim.keymap.set('n', '<leader>bk', ':BufferLineCyclePrev<CR>', { noremap = true, desc = '[B]uffer[K]Previous' })
-vim.keymap.set('n', '<leader>bc', ':BufferLinePickClose<CR>', { noremap = true, desc = '[B]uffer[C]lose' })
+vim.keymap.set('n', '<leader>bd', ':bd', { noremap = true, desc = '[B]uffer[D]elete' })
+vim.keymap.set('n', '<leader>bcp', ':BufferLinePickClose<CR>', { noremap = true, desc = '[B]uffer[C]lose[P]ick' })
 vim.keymap.set('n', '<leader>bco', ':BufferLineCloseOthers<CR>', { noremap = true, desc = '[B]uffer[C]lose[O]thers' })
 
 --dashboard
 vim.keymap.set('n', '<leader>;', ':lua MiniStarter.open()<CR>', { noremap = true, desc = 'Dashboard[;]' })
---nvimtree toggle
-vim.keymap.set('n', '<leader>e', ':NvimTreeToggle<CR>', { noremap = true, desc = '[e]xplorer files' })
+--file tree toggle
+vim.keymap.set('n', '<leader>e', ':lua MiniFiles.open()<CR>', { noremap = true, desc = '[e]xplorer files' })
+vim.keymap.set('n', '<leader>te', ':NvimTreeToggle<CR>', { noremap = true, desc = '[T]oggle[e]xplorer' })
 
 -- quarto quick add
 vim.keymap.set({ 'n', 'i' }, '<M-i>', '<esc>o```{python}<cr>```<esc>O', { desc = '[i]nsert python code chunk' })
@@ -260,6 +266,7 @@ require('lazy').setup({
 
       -- Document existing key chains
       spec = {
+        { '<leader>a', group = '[A]I' },
         { '<leader>b', group = '[B]uffer', mode = { 'n', 'x' } },
         { '<leader>c', group = '[C]ode', mode = { 'n', 'x' } },
         { '<leader>d', group = '[D]ocument' },
@@ -690,12 +697,12 @@ require('lazy').setup({
           -- `friendly-snippets` contains a variety of premade snippets.
           --    See the README about individual language/framework/plugin snippets:
           --    https://github.com/rafamadriz/friendly-snippets
-          -- {
-          --   'rafamadriz/friendly-snippets',
-          --   config = function()
-          --     require('luasnip.loaders.from_vscode').lazy_load()
-          --   end,
-          -- },
+          {
+            'rafamadriz/friendly-snippets',
+            config = function()
+              require('luasnip.loaders.from_vscode').lazy_load()
+            end,
+          },
         },
       },
       'saadparwaiz1/cmp_luasnip',
@@ -920,14 +927,17 @@ require('lazy').setup({
           starter.gen_hook.adding_bullet '  ',
         },
         header = function()
-          --           local banner = [[
-          --       ████ ██████           █████     ██
-          --      ███████████             █████  █
-          --      █████████ ██████████████████ ███   ██████████
-          --     █████████  ███    █████████████ █████ █████████████
-          --    █████████ ██████████ █████████ █████ █████ ████ ████
-          --  ███████████ ███    ███ █████████ █████ █████ ████ ████
-          -- ██████  █████████████████████ ████ █████ █████ ████ █████]]
+          local banner = [[
+       .-"-.            .-"-.            .-"-.           .-"-.
+     _/_-.-_\_        _/.-.-.\_        _/.-.-.\_       _/.-.-.\_
+    / __} {__ \      /|( o o )|\      ( ( o o ) )     ( ( o o ) )
+   / //  "  \\ \    | //  "  \\ |      |/  "  \|       |/  "  \|
+  / / \'---'/ \ \  / / \'---'/ \ \      \'/^\'/         \ '~' /
+  \ \_/`"""`\_/ /  \ \_/`"""`\_/ /      /`\ /`\         /`"""`\
+   \           /    \           /      /  /|\  \       /       \
+
+-={ see no evil }={ hear no evil }={ speak no evil }={ have more fun }=-
+           ]]
           --           local banner = [[
           -- ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣤⣤⣴⣶⣶⣶⣶⣶⣶⣶⣶⣶⣦⣤⣤⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
           -- ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⣴⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣶⣮⣉⠙⠳⢶⣤⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
@@ -963,56 +973,6 @@ require('lazy').setup({
           -- ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⠛⠿⣿⣿⣷⣄⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣀⣤⠴⠟⠛⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
           -- ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⡀⡉⣛⡛⠻⠶⠦⠤⠤⠤⠤⠤⠤⠤⠤⠶⠖⠛⠛⠋⣁⠀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
           --           ]]
-          local banner = [[
-                                                          ████████████████████            
-                                                      ██▓▓▒▒▓▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▓▓          
-                        ▓▓▓▓██▓▓▓▓▓▓▓▓              ▓▓▒▒▒▒▓▓▒▒▓▓████████▒▒▓▓▒▒██          
-                      ██░░░░▒▒░░░░░░░░████        ██▒▒▒▒▒▒██▓▓▒▒▒▒░░░░░░████████          
-                    ██░░▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░██    ██▒▒▒▒▓▓██▒▒░░▒▒▒▒▒▒▒▒▒▒▒▒░░░░░░████      
-                    ██▒▒▒▒▒▒▓▓▒▒▒▒▒▒▒▒▓▓▒▒▒▒▓▓  ██▒▒▓▓██▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░▒▒▓▓▓▓  
-                  ██▒▒▓▓▒▒████████████▓▓▒▒▓▓▒▒██▒▒▓▓██▒▒▒▒▒▒▓▓▒▒▒▒▓▓▒▒▒▒▓▓▒▒▒▒▒▒▒▒▒▒░░██  
-                  ██▒▒████▒▒▒▒░░░░░░░░██████▓▓██▓▓▓▓██▓▓▒▒▒▒▓▓▒▒▒▒▓▓▒▒▒▒▓▓▒▒▓▓▒▒▒▒▒▒▒▒██  
-                  ████▒▒░░▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▓▓████▓▓██▓▓▓▓██████████████▒▒▓▓▒▒▓▓▒▒▓▓▒▒██    
-                  ██░░▒▒▒▒▒▒▒▒▒▒▓▓▒▒▒▒▒▒▒▒▓▓▓▓██▓▓██▓▓██▒▒▒▒▒▒▒▒░░░░▒▒████▒▒▓▓▒▒▓▓▒▒██    
-                ██░░▒▒▒▒▒▒▒▒▓▓▒▒▓▓▒▒▓▓▒▒▓▓▓▓██████████▒▒▓▓▒▒▒▒▓▓▒▒▒▒▒▒░░░░██▓▓▒▒▓▓▒▒██    
-                ██▒▒▒▒▒▒▓▓▒▒▓▓▒▒▓▓▒▒▓▓██████▒▒▓▓▓▓▓▓██▓▓▓▓▓▓▒▒▓▓▒▒▓▓▒▒▒▒▒▒░░██▒▒▓▓██      
-              ██▒▒▒▒▒▒▒▒▓▓▒▒▓▓▒▒▓▓████▒▒▒▒▓▓▒▒██████▓▓██████▒▒▓▓▒▒▓▓▒▒▒▒▒▒▒▒▒▒██▓▓██      
-              ██▒▒▒▒▓▓▒▒▓▓▒▒██████▒▒▒▒▓▓▒▒▒▒██▒▒▓▓▓▓██▓▓██  ████▒▒▓▓▒▒▓▓▒▒▒▒░░████        
-                ██▒▒▓▓▒▒▓▓██  ██▒▒▒▒▒▒▒▒▓▓██▒▒▓▓▒▒████▓▓██      ██▓▓▒▒▓▓▒▒▓▓▒▒██          
-                ██▒▒▓▓▒▒██  ██░░▒▒▒▒▒▒▒▒██▒▒▒▒▒▒▓▓██  ██▓▓██      ██▒▒▓▓▒▒▓▓▒▒██          
-                  ██▒▒██    ██░░▒▒▒▒▓▓▓▓██▒▒▓▓▒▒██      ██▒▒██    ██▒▒▓▓▒▒▓▓▒▒██          
-                    ████    ██░░▒▒▒▒▒▒▒▒██▒▒▒▒▓▓██      ██▒▒▓▓    ░░▓▓▓▓▒▒▓▓▒▒██          
-                          ▓▓▒▒▒▒▓▓▓▓▒▒▒▒██▒▒▒▒▒▒██        ██▒▒██      ██▒▒▓▓▒▒██          
-                          ██▒▒▒▒▒▒▒▒▓▓▓▓██▒▒▒▒▓▓▓▓██      ██▓▓██        ██▓▓▒▒██          
-                            ██▒▒▒▒▒▒▒▒▒▒██░░░░▒▒▒▒██        ██▒▒██        ██▒▒██          
-                            ██▒▒▒▒▓▓▓▓▓▓████████▒▒▒▒██      ██▒▒██        ████            
-                              ██▒▒▒▒▒▒▒▒▒▒██    ██████        ██▒▒██                      
-                                ████████████                  ██▒▒▒▒██                    
-                                                                ██▓▓██                    
-                                                                ██▒▒▒▒██                  
-                                                                  ▓▓▒▒██                  
-                                                                  ██▒▒▒▒▓▓                
-                                                                    ██▓▓▓▓██              
-                                                                    ██▒▒▒▒▒▒██            
-                                                      ████            ██▒▒▒▒██            
-                                                    ██░░██            ██▒▒▒▒▒▒██          
-                                                  ██▒▒██      ████      ██▓▓▓▓██          
-                                                ██▒▒░░▒▒██████░░██      ██▓▓▓▓▓▓██        
-                                              ▓▓▒▒░░░░░░▒▒██░░██          ██▓▓▒▒██        
-                                            ██▒▒  ▒▒░░▒▒██░░██            ██▒▒▒▒▒▒██      
-                                          ██▒▒  ▒▒  ▒▒██░░██              ██▒▒▒▒▒▒██      
-                                        ██▒▒  ▒▒  ▒▒██░░██                  ██▒▒▒▒▓▓██    
-                                      ██▒▒░░▒▒░░▒▒██░░██                    ██▓▓▓▓▓▓██    
-      ████████          ██████████████▒▒░░▒▒░░▒▒██░░██                      ██▓▓▓▓▒▒██    
-    ██  ░░  ░░██      ██▒▒  ▒▒▒▒▒▒░░  ████░░▒▒██░░██                        ██▒▒▒▒▒▒▒▒██  
-░░██░░░░░░    ░░██      ██▒▒░░░░░░▒▒▒▒░░░░████░░██                            ██▒▒▒▒▒▒██  
-░░██  ░░░░    ░░██        ██████████████████░░██                              ██▒▒▒▒▒▒██  
-▒▒██  ░░░░    ░░██        ░░██▒▒▒▒▒▒▒▒▒▒██░░▓▓▒▒██                            ██▒▒▓▓▓▓██  
-░░██  ░░░░    ░░██        ██░░██▓▓██████░░██  ██▒▒██                          ██▓▓▓▓▒▒▒▒██
-    ██  ░░  ░░██          ████      ██░░██      ██░░██                        ██▓▓▓▓▒▒▓▓██
-    ░░▓▓██▓▓▓▓░░            ░░    ██░░▓▓░░        ████                        ██▓▓▒▒▓▓▓▓██
-                                  ██▓▓                                        ██▓▓▓▓▓▓▓▓██
-                  ]]
           return banner
         end,
         footer = 'loaded ' .. stats.count .. ' plugins ',
@@ -1043,7 +1003,7 @@ require('lazy').setup({
     main = 'nvim-treesitter.configs', -- Sets main module to use for opts
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
     opts = {
-      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' },
+      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc', 'yaml' },
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {
@@ -1192,6 +1152,14 @@ require('lazy').setup({
   },
   --toggle term
   {
+    'akinsho/toggleterm.nvim',
+    version = '*',
+    opts = {
+      direction = 'float', -- 'vertical' | 'horizontal' | 'tab' | 'float',
+      open_mapping = [[<c-\>]], -- or { [[<c-\>]], [[<c-¥>]] } if you also use a Japanese keyboard.
+    },
+  },
+  {
     url = 'https://git.sr.ht/~havi/telescope-toggleterm.nvim',
     event = 'TermOpen',
     dependencies = {
@@ -1213,15 +1181,19 @@ require('lazy').setup({
   --markdown
   {
     'MeanderingProgrammer/render-markdown.nvim',
-    ft = { 'markdown', 'quarto' },
-    opts = {},
+    ft = { 'markdown', 'quarto', 'Avante' },
+    opts = {
+      file_types = { 'markdown', 'quarto', 'Avante' },
+    },
     dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' }, -- if you prefer nvim-web-devicons
   },
   {
     'epwalsh/obsidian.nvim',
-    lazy = false,
+    version = '*',
+    lazy = true,
+    ft = 'markdown',
     -- enabled = true,
-    event = { 'BufReadPre  ' .. vim.fn.expand '~' .. 'knowledgebase/**.md' },
+    -- event = { 'BufReadPre  ' .. vim.fn.expand '~' .. 'knowledgebase/**.md' },
     -- If you want to use the home shortcut '~' here you need to call 'vim.fn.expand':
     -- event = { "BufReadPre " .. vim.fn.expand "~" .. "/my-vault/**.md" },
     dependencies = {
@@ -1233,8 +1205,12 @@ require('lazy').setup({
 
       -- Optional, for search and quick-switch functionality.
       'nvim-telescope/telescope.nvim',
-      'godlygeek/tabular',
-      'preservim/vim-markdown',
+      -- 'godlygeek/tabular',
+      -- 'preservim/vim-markdown',
+    },
+    completion = {
+      nvim_cmp = true,
+      min_chars = 2,
     },
     opts = {
       workspaces = {
@@ -1251,6 +1227,7 @@ require('lazy').setup({
           path = '/Users/ehoujin/Ericsson - Remote Radio Global Solution Team - VIPP - VIPP/Anatomy',
         },
       },
+      picker = { name = 'telescope.nvim' },
       -- see below for full list of options 👇
       --
       -- https://github.com/Vinzent03/obsidian-advanced-uri
@@ -1263,6 +1240,11 @@ require('lazy').setup({
         -- Overrides the 'gf' mapping to work on markdown/wiki links within your vault.
         -- ["fo"] = require("obsidian.mapping").gf_passthrough(),
         -- ["gf"] = require("obsidian.mapping").gf_passthrough(),
+      },
+      -- `true` indicates that you don't want obsidian.nvim to manage frontmatter.
+      disable_frontmatter = true,
+      ui = {
+        enable = false, -- set to false to disable all additional syntax featuresA
       },
     },
     config = function(_, opts)
@@ -1397,12 +1379,14 @@ require('lazy').setup({
     lazy = true,
     cmd = { 'Outline', 'OutlineOpen' },
     keys = { -- Example mapping to toggle outline
-      { '<leader>o', '<cmd>Outline<CR>', desc = 'Toggle outline' },
+      { '<leader>co', '<cmd>Outline<CR>', desc = 'Toggle outline' },
     },
     opts = {
       -- Your setup opts here
     },
   },
+  -- git conflict
+  { 'akinsho/git-conflict.nvim', version = '*', config = true },
   --tree
   {
     'nvim-tree/nvim-tree.lua',
@@ -1489,6 +1473,123 @@ require('lazy').setup({
     'numToStr/Comment.nvim',
     opts = {
       -- add any options here
+    },
+  },
+  --AI
+  {
+    'yetone/avante.nvim',
+    event = 'VeryLazy',
+    lazy = false,
+    version = false, -- set this if you want to always pull the latest change
+    opts = {
+      -- dual_boost = {
+      --   enabled = true,
+      --   first_provider = 'ollama',
+      --   second_provider = 'ELI',
+      --   prompt = 'Based on the two reference outputs below, generate a response that incorporates elements from both but reflects your own judgment and unique perspective. Do not provide any explanation, just give the response directly. Reference Output 1: {{provider1_output}}, Reference Output 2: {{provider2_output}}',
+      --   timeout = 60000, -- Timeout in milliseconds
+      -- },
+      -- add any opts here
+      -- provider = 'ollama',
+      -- vendors = {
+      --   -- ---@type AvanteProvider --local ollama
+      --   ollama = {
+      --     -- ['local'] = true,
+      --     __inherited_from = 'openai',
+      --     api_key_name = '',
+      --     endpoint = '127.0.0.1:11434/v1',
+      --     model = 'qwen2.5-coder',
+      --     -- model = 'mistral',
+      --     -- model = 'opencoder',
+      --     parse_response_data = function(data_stream, event_state, opts)
+      --       require('avante.providers').copilot.parse_response(data_stream, event_state, opts)
+      --     end,
+      --     parse_curl_args = function(opts, code_opts)
+      --       return {
+      --         url = opts.endpoint .. '/chat/completions',
+      --         headers = {
+      --           ['Accept'] = 'application/json',
+      --           ['Content-Type'] = 'application/json',
+      --         },
+      --         body = {
+      --           model = opts.model,
+      --           messages = require('avante.providers').copilot.parse_messages(code_opts),
+      --           -- max_tokens = 2048,
+      --           stream = true,
+      --         },
+      --       }
+      --     end,
+      --   },
+      --   ---@type AvanteProvider --/// ELI
+      --   -- ollama = {
+      --   --   __inherited_from = 'openai',
+      --   --   endpoint = os.getenv 'ELI_API_URL',
+      --   --   api_key_name = 'ELI_API_KEY',
+      --   --   model = 'qwen2.5-7b',
+      --   --   -- model = 'mistral',
+      --   --   -- model = 'opencoder',
+      --   --   parse_response_data = function(data_stream, event_state, opts)
+      --   --     require('avante.providers').copilot.parse_response(data_stream, event_state, opts)
+      --   --   end,
+      --   --   parse_curl_args = function(opts, code_opts)
+      --   --     return {
+      --   --       url = opts.endpoint .. 'llm/chat_stream/',
+      --   --       headers = {
+      --   --         ['Accept'] = 'application/json',
+      --   --         ['Content-Type'] = 'application/json',
+      --   --       },
+      --   --       body = {
+      --   --         model = opts.model,
+      --   --         messages = require('avante.providers').copilot.parse_messages(code_opts),
+      --   --         max_new_tokens = 2048,
+      --   --         stream = true,
+      --   --       },
+      --   --     }
+      --   --   end,
+      --   -- },
+      -- },
+
+      provider = 'cclaude', -- Recommend using Claude
+      auto_suggestions_provider = 'cclaude', -- Since auto-suggestions are a high-frequency operation and therefore expensive, it is recommended to specify an inexpensive provider or even a free provider: copilot
+      vendors = {
+        cclaude = {
+          __inherited_from = 'openai',
+          endpoint = 'mj.chatgptten.com/v1',
+          api_key_name = 'CLAUDE_API_KEY',
+          model = 'claude-3-5-sonnet-20241022',
+          temperature = 0,
+          max_tokens = 4096,
+        },
+      },
+    },
+    -- if you want to build from source then do `make BUILD_FROM_SOURCE=true`
+    build = 'make',
+    -- build = "powershell -ExecutionPolicy Bypass -File Build.ps1 -BuildFromSource false" -- for windows
+    dependencies = {
+      'stevearc/dressing.nvim',
+      'nvim-lua/plenary.nvim',
+      'MunifTanjim/nui.nvim',
+      --- The below dependencies are optional,
+      'hrsh7th/nvim-cmp', -- autocompletion for avante commands and mentions
+      'nvim-tree/nvim-web-devicons', -- or echasnovski/mini.icons
+      -- 'zbirenbaum/copilot.lua', -- for providers='copilot'
+      {
+        -- support for image pasting
+        'HakonHarnes/img-clip.nvim',
+        event = 'VeryLazy',
+        opts = {
+          -- recommended settings
+          default = {
+            embed_image_as_base64 = false,
+            prompt_for_file_name = false,
+            drag_and_drop = {
+              insert_mode = true,
+            },
+            -- required for Windows users
+            -- use_absolute_path = true,
+          },
+        },
+      },
     },
   },
   -- using lazy.nvim
