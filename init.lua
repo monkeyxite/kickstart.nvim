@@ -133,6 +133,10 @@ vim.keymap.set('n', '<leader>te', ':NvimTreeToggle<CR>', { noremap = true, desc 
 vim.keymap.set({ 'n', 'i' }, '<M-i>', '<esc>o```{python}<cr>```<esc>O', { desc = '[i]nsert python code chunk' })
 -- IPython Term
 vim.keymap.set({ 'n' }, '<leader>ci', ':split term://ipython<cr>', { desc = '[c]ode [i]python' })
+-- AI
+vim.keymap.set({ 'n', 'v' }, '<leader>acc', ':CodeCompanionChat Toggle<cr>', { desc = '[A]I[C]ompanion[C]hat toggle' })
+vim.keymap.set({ 'n', 'v' }, '<leader>aca', ':CodeCompanionActions<cr>', { desc = '[A]I[C]ompanion[A]ction' })
+vim.keymap.set({ 'v' }, '<leader>acl', ':CodeCompanionChat Add<cr>', { desc = '[A]I[C]ompanion add [V]isual' })
 
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
@@ -907,6 +911,8 @@ require('lazy').setup({
 
       -- files
       require('mini.files').setup()
+      -- diff
+      require('mini.diff').setup()
       -- autopairs
       require('mini.pairs').setup()
       --startify
@@ -1181,9 +1187,9 @@ require('lazy').setup({
   --markdown
   {
     'MeanderingProgrammer/render-markdown.nvim',
-    ft = { 'markdown', 'quarto', 'Avante' },
+    ft = { 'markdown', 'quarto', 'codecompanion', 'Avante' },
     opts = {
-      file_types = { 'markdown', 'quarto', 'Avante' },
+      file_types = { 'markdown', 'quarto', 'codecompanion', 'Avante' },
     },
     dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' }, -- if you prefer nvim-web-devicons
   },
@@ -1476,6 +1482,69 @@ require('lazy').setup({
     },
   },
   --AI
+  {
+    'olimorris/codecompanion.nvim',
+    dependencies = {
+      { 'nvim-lua/plenary.nvim', branch = 'master' },
+      'nvim-treesitter/nvim-treesitter',
+    },
+    config = function()
+      require('codecompanion').setup {
+        strategies = {
+          agent = {
+            adapter = 'llm',
+          },
+          chat = {
+            adapter = 'llm', -- copilot defaults to claude-sonent now! 🎉
+          },
+          inline = {
+            adapter = 'llm',
+          },
+        },
+        display = {
+          diff = {
+            provider = 'mini_diff',
+          },
+        },
+        opts = {
+          log_level = 'DEBUG',
+        },
+        adapters = {
+          llm = function()
+            --cclaude
+            -- return require('codecompanion.adapters').extend('openai_compatible', {
+            --   env = {
+            --     url = 'https://mj.chatgptten.com', -- optional: default value is ollama url http://127.0.0.1:11434
+            --     api_key = function()
+            --       return os.getenv 'CLAUDE_API_KEY'
+            --     end, -- optional: if your endpoint is authenticated
+            --     chat_url = '/v1/chat/completions', -- optional: default value, override if different
+            --   },
+            --   schema = {
+            --     model = {
+            --       default = 'claude-3-5-sonnet-20241022',
+            --     },
+            --   },
+            -- })
+            --ollama
+            return require('codecompanion.adapters').extend('ollama', {
+              schema = {
+                model = {
+                  default = 'qwen2.5-coder',
+                },
+                num_ctx = {
+                  default = 40960,
+                },
+                -- num_predict = {
+                --   default = -1,
+                -- },
+              },
+            })
+          end,
+        },
+      }
+    end,
+  },
   {
     'yetone/avante.nvim',
     event = 'VeryLazy',
