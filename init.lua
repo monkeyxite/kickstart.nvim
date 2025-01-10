@@ -119,7 +119,7 @@ vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper win
 vim.keymap.set('n', '<leader>bp', ':BufferLinePick<CR>', { noremap = true, desc = '[B]uffer[P]ick' })
 vim.keymap.set('n', '<leader>bj', ':BufferLineCycleNext<CR>', { noremap = true, desc = '[B]uffer[J]next' })
 vim.keymap.set('n', '<leader>bk', ':BufferLineCyclePrev<CR>', { noremap = true, desc = '[B]uffer[K]Previous' })
-vim.keymap.set('n', '<leader>bd', ':bd', { noremap = true, desc = '[B]uffer[D]elete' })
+vim.keymap.set('n', '<leader>bd', ':bd<CR>', { noremap = true, desc = '[B]uffer[D]elete' })
 vim.keymap.set('n', '<leader>bcp', ':BufferLinePickClose<CR>', { noremap = true, desc = '[B]uffer[C]lose[P]ick' })
 vim.keymap.set('n', '<leader>bco', ':BufferLineCloseOthers<CR>', { noremap = true, desc = '[B]uffer[C]lose[O]thers' })
 
@@ -366,6 +366,7 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
       vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
       vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
+      vim.keymap.set('n', '<leader>sb', builtin.buffers, { desc = '[S]earch [B]uffers' })
       vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
       vim.keymap.set('n', '<leader>sp', builtin.resume, { desc = '[S]earch [P]rojects' })
       vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
@@ -1084,33 +1085,6 @@ require('lazy').setup({
       end, { desc = 'send code cell to term' })
     end,
   },
-  {
-    'sphamba/smear-cursor.nvim',
-    opts = {
-      -- Cursor color. Defaults to Normal gui foreground color
-      cursor_color = '#d3cdc3',
-
-      -- Background color. Defaults to Normal gui background color
-      normal_bg = '#282828',
-
-      -- Smear cursor when switching buffers
-      smear_between_buffers = true,
-
-      -- Smear cursor when moving within line or to neighbor lines
-      smear_between_neighbor_lines = true,
-
-      -- Use floating windows to display smears outside buffers.
-      -- May have performance issues with other plugins.
-      use_floating_windows = true,
-
-      -- Set to `true` if your font supports legacy computing symbols (block unicode symbols).
-      -- Smears will blend better on all backgrounds.
-      legacy_computing_symbols_support = false,
-
-      -- Attempt to hide the real cursor when smearing.
-      hide_target_hack = true,
-    },
-  },
   --mail
   -- TODO to fix ft for mail to enable keymapping of spelling/mail
   {
@@ -1197,7 +1171,7 @@ require('lazy').setup({
     'epwalsh/obsidian.nvim',
     version = '*',
     lazy = true,
-    ft = 'markdown',
+    ft = { 'markdown', 'qmd', 'quarto' },
     -- enabled = true,
     -- event = { 'BufReadPre  ' .. vim.fn.expand '~' .. 'knowledgebase/**.md' },
     -- If you want to use the home shortcut '~' here you need to call 'vim.fn.expand':
@@ -1261,36 +1235,44 @@ require('lazy').setup({
   },
   {
     'vhyrro/luarocks.nvim',
-    priority = 60,
+    priority = 1001,
     opts = {
       rocks = { 'magick' },
     },
   },
   {
     '3rd/image.nvim',
-    event = 'VimEnter', -- Sets the loading event to 'VimEnter'
+    event = 'VeryLazy',
+    build = false,
+    dependencies = {
+      -- 'kiyoon/magick.nvim',
+      'luarocks.nvim',
+    },
     config = function()
       -- -- default config
       require('image').setup {
         backend = 'kitty',
+        kitty_method = 'normal',
+        -- processor = 'magick_rock', -- or "magick_cli"
         integrations = {
           markdown = {
             enabled = true,
             clear_in_insert_mode = false,
             download_remote_images = true,
             only_render_image_at_cursor = true,
-            filetypes = { 'markdown', 'vimwiki', 'qmd' }, -- markdown extensions (ie. quarto) can go here
-            resolve_image_path = function(document_path, image_path, fallback)
-              local ob = require 'obsidian'
-              -- Format image path for Obsidian notes
-              local obc = ob.get_client()
-              local working_dir = obc.current_workspace.path.filename
-              if working_dir:find '3. Resource/assets/' then
-                return working_dir .. '/' .. image_path
-              end
-              -- Fallback to the default behavior
-              return fallback(document_path, image_path)
-            end,
+            -- floating_windows = true, -- if true, images will be rendered in floating markdown windows
+            filetypes = { 'markdown', 'vimwiki', 'q' }, -- markdown extensions (ie. quarto) can go here
+            -- resolve_image_path = function(document_path, image_path, fallback)
+            --   local ob = require 'obsidian'
+            --   -- Format image path for Obsidian notes
+            --   local obc = ob.get_client()
+            --   local working_dir = obc.current_workspace.path.filename
+            --   if working_dir:find '3. Resource/assets/' then
+            --     return working_dir .. '/' .. image_path
+            --   end
+            --   -- Fallback to the default behavior
+            --   return fallback(document_path, image_path)
+            -- end,
           },
           neorg = {
             enabled = true,
@@ -1310,9 +1292,9 @@ require('lazy').setup({
         max_height = 12,
         max_height_window_percentage = math.huge,
         max_width_window_percentage = math.huge,
-        window_overlap_clear_enabled = true,
-        window_overlap_clear_ft_ignore = { 'cmp_menu', 'cmp_docs', '' },
-        editor_only_render_when_focused = false, -- auto show/hide images when the editor gains/looses focus
+        -- window_overlap_clear_enabled = true,
+        -- window_overlap_clear_ft_ignore = { 'cmp_menu', 'cmp_docs', '' },
+        -- editor_only_render_when_focused = false, -- auto show/hide images when the editor gains/looses focus
         tmux_show_only_in_active_window = true, -- auto show/hide images in the correct Tmux window (needs visual-activity off)
         hijack_file_patterns = { '*.png', '*.jpg', '*.jpeg', '*.gif', '*.webp', '*.avif' }, -- render image files as images when opened
       }
@@ -1329,7 +1311,7 @@ require('lazy').setup({
     --     end
     -- end,
     -- },
-    version = '1.1.0', -- or comment out for latest
+    -- version = '1.1.0', -- or comment out for latest
   },
   { 'benlubas/image-save.nvim', cmd = 'SaveImage' },
   {
@@ -1388,7 +1370,13 @@ require('lazy').setup({
       { '<leader>co', '<cmd>Outline<CR>', desc = 'Toggle outline' },
     },
     opts = {
-      -- Your setup opts here
+      -- You providers
+      providers = {
+        priority = { 'markdown', 'lsp' },
+        markdown = {
+          filetypes = { 'markdown', 'quarto' },
+        },
+      },
     },
   },
   -- git conflict
@@ -1559,77 +1547,77 @@ require('lazy').setup({
       --   timeout = 60000, -- Timeout in milliseconds
       -- },
       -- add any opts here
-      -- provider = 'ollama',
-      -- vendors = {
-      --   -- ---@type AvanteProvider --local ollama
-      --   ollama = {
-      --     -- ['local'] = true,
-      --     __inherited_from = 'openai',
-      --     api_key_name = '',
-      --     endpoint = '127.0.0.1:11434/v1',
-      --     model = 'qwen2.5-coder',
-      --     -- model = 'mistral',
-      --     -- model = 'opencoder',
-      --     parse_response_data = function(data_stream, event_state, opts)
-      --       require('avante.providers').copilot.parse_response(data_stream, event_state, opts)
-      --     end,
-      --     parse_curl_args = function(opts, code_opts)
-      --       return {
-      --         url = opts.endpoint .. '/chat/completions',
-      --         headers = {
-      --           ['Accept'] = 'application/json',
-      --           ['Content-Type'] = 'application/json',
-      --         },
-      --         body = {
-      --           model = opts.model,
-      --           messages = require('avante.providers').copilot.parse_messages(code_opts),
-      --           -- max_tokens = 2048,
-      --           stream = true,
-      --         },
-      --       }
-      --     end,
-      --   },
-      --   ---@type AvanteProvider --/// ELI
-      --   -- ollama = {
-      --   --   __inherited_from = 'openai',
-      --   --   endpoint = os.getenv 'ELI_API_URL',
-      --   --   api_key_name = 'ELI_API_KEY',
-      --   --   model = 'qwen2.5-7b',
-      --   --   -- model = 'mistral',
-      --   --   -- model = 'opencoder',
-      --   --   parse_response_data = function(data_stream, event_state, opts)
-      --   --     require('avante.providers').copilot.parse_response(data_stream, event_state, opts)
-      --   --   end,
-      --   --   parse_curl_args = function(opts, code_opts)
-      --   --     return {
-      --   --       url = opts.endpoint .. 'llm/chat_stream/',
-      --   --       headers = {
-      --   --         ['Accept'] = 'application/json',
-      --   --         ['Content-Type'] = 'application/json',
-      --   --       },
-      --   --       body = {
-      --   --         model = opts.model,
-      --   --         messages = require('avante.providers').copilot.parse_messages(code_opts),
-      --   --         max_new_tokens = 2048,
-      --   --         stream = true,
-      --   --       },
-      --   --     }
-      --   --   end,
-      --   -- },
-      -- },
-
-      provider = 'cclaude', -- Recommend using Claude
-      auto_suggestions_provider = 'cclaude', -- Since auto-suggestions are a high-frequency operation and therefore expensive, it is recommended to specify an inexpensive provider or even a free provider: copilot
+      provider = 'ollama',
       vendors = {
-        cclaude = {
+        -- ---@type AvanteProvider --local ollama
+        ollama = {
+          -- ['local'] = true,
           __inherited_from = 'openai',
-          endpoint = 'mj.chatgptten.com/v1',
-          api_key_name = 'CLAUDE_API_KEY',
-          model = 'claude-3-5-sonnet-20241022',
-          temperature = 0,
-          max_tokens = 4096,
+          api_key_name = '',
+          endpoint = '127.0.0.1:11434/v1',
+          model = 'qwen2.5-coder',
+          -- model = 'mistral',
+          -- model = 'opencoder',
+          parse_response_data = function(data_stream, event_state, opts)
+            require('avante.providers').copilot.parse_response(data_stream, event_state, opts)
+          end,
+          parse_curl_args = function(opts, code_opts)
+            return {
+              url = opts.endpoint .. '/chat/completions',
+              headers = {
+                ['Accept'] = 'application/json',
+                ['Content-Type'] = 'application/json',
+              },
+              body = {
+                model = opts.model,
+                messages = require('avante.providers').copilot.parse_messages(code_opts),
+                -- max_tokens = 2048,
+                stream = true,
+              },
+            }
+          end,
         },
+        ---@type AvanteProvider --/// ELI
+        -- ollama = {
+        --   __inherited_from = 'openai',
+        --   endpoint = os.getenv 'ELI_API_URL',
+        --   api_key_name = 'ELI_API_KEY',
+        --   model = 'qwen2.5-7b',
+        --   -- model = 'mistral',
+        --   -- model = 'opencoder',
+        --   parse_response_data = function(data_stream, event_state, opts)
+        --     require('avante.providers').copilot.parse_response(data_stream, event_state, opts)
+        --   end,
+        --   parse_curl_args = function(opts, code_opts)
+        --     return {
+        --       url = opts.endpoint .. 'llm/chat_stream/',
+        --       headers = {
+        --         ['Accept'] = 'application/json',
+        --         ['Content-Type'] = 'application/json',
+        --       },
+        --       body = {
+        --         model = opts.model,
+        --         messages = require('avante.providers').copilot.parse_messages(code_opts),
+        --         max_new_tokens = 2048,
+        --         stream = true,
+        --       },
+        --     }
+        --   end,
+        -- },
       },
+
+      -- provider = 'cclaude', -- Recommend using Claude
+      -- auto_suggestions_provider = 'cclaude', -- Since auto-suggestions are a high-frequency operation and therefore expensive, it is recommended to specify an inexpensive provider or even a free provider: copilot
+      -- vendors = {
+      --   cclaude = {
+      --     __inherited_from = 'openai',
+      --     endpoint = 'mj.chatgptten.com/v1',
+      --     api_key_name = 'CLAUDE_API_KEY',
+      --     model = 'claude-3-5-sonnet-20241022',
+      --     temperature = 0,
+      --     max_tokens = 4096,
+      --   },
+      -- },
     },
     -- if you want to build from source then do `make BUILD_FROM_SOURCE=true`
     build = 'make',
@@ -1708,6 +1696,12 @@ require('lazy').setup({
     },
   },
 })
+
+-- Magit for vim
+-- For more, see: https://github.com/NeogitOrg/neogit
+local neogit = require 'neogit'
+neogit.setup {}
+vim.keymap.set('n', '<leader>gg', ':Neogit<CR>', { desc = 'Neo[g]it' })
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
