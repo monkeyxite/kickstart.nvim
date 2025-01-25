@@ -717,11 +717,29 @@ require('lazy').setup({
       --  into multiple repos for maintenance purposes.
       'hrsh7th/cmp-nvim-lsp',
       'hrsh7th/cmp-path',
+      -- Adding acc to qmd quickstart
+      'hrsh7th/cmp-nvim-lsp-signature-help',
+      'hrsh7th/cmp-buffer',
+      'hrsh7th/cmp-calc',
+      'hrsh7th/cmp-emoji',
+      'f3fora/cmp-spell',
+      'ray-x/cmp-treesitter',
+      'kdheepak/cmp-latex-symbols',
+      'jmbuhr/cmp-pandoc-references',
+      'onsails/lspkind-nvim',
+      'jmbuhr/otter.nvim',
     },
     config = function()
       -- See `:help cmp`
       local cmp = require 'cmp'
       local luasnip = require 'luasnip'
+      -- add lspkind from qmd ks
+      local lspkind = require 'lspkind'
+      local has_words_before = function()
+        local line, col = unpack(vim.api.nvim_win_get_cursor(0))
+        return col ~= 0 and vim.api.nvim_buf_get_lines(0, line - 1, line, true)[1]:sub(col, col):match '%s' == nil
+      end
+
       luasnip.config.setup {}
 
       cmp.setup {
@@ -738,51 +756,80 @@ require('lazy').setup({
         -- No, but seriously. Please read `:help ins-completion`, it is really good!
         mapping = cmp.mapping.preset.insert {
           -- Select the [n]ext item
-          ['<C-n>'] = cmp.mapping.select_next_item(),
+          ['<C-n>'] = cmp.mapping(function(fallback)
+            if luasnip.expand_or_jumpable() then
+              luasnip.expand_or_jump()
+              fallback()
+            end
+          end, { 'i', 's' }),
           -- Select the [p]revious item
-          ['<C-p>'] = cmp.mapping.select_prev_item(),
-
-          -- Scroll the documentation window [b]ack / [f]orward
-          ['<C-b>'] = cmp.mapping.scroll_docs(-4),
-          ['<C-f>'] = cmp.mapping.scroll_docs(4),
-
+          ['<C-p>'] = cmp.mapping(function(fallback)
+            if luasnip.jumpable(-1) then
+              luasnip.jump(-1)
+            else
+              fallback()
+            end
+          end, { 'i', 's' }),
+          ['<C-e>'] = cmp.mapping.abort(),
           -- Accept ([y]es) the completion.
           --  This will auto-import if your LSP supports it.
           --  This will expand snippets if the LSP sent a snippet.
-          ['<C-y>'] = cmp.mapping.confirm { select = true },
 
-          -- If you prefer more traditional completion keymaps,
-          -- you can uncomment the following lines
-          --['<CR>'] = cmp.mapping.confirm { select = true },
-          --['<Tab>'] = cmp.mapping.select_next_item(),
-          --['<S-Tab>'] = cmp.mapping.select_prev_item(),
+          ['<CR>'] = cmp.mapping.confirm {
+            select = true,
+          },
 
-          -- Manually trigger a completion from nvim-cmp.
-          --  Generally you don't need this, because nvim-cmp will display
-          --  completions whenever it has completion options available.
-          ['<C-Space>'] = cmp.mapping.complete {},
+          ['<Tab>'] = cmp.mapping(function(fallback)
+            if cmp.visible() then
+              cmp.select_next_item()
+            elseif has_words_before() then
+              cmp.complete()
+            else
+              fallback()
+            end
+          end, { 'i', 's' }),
+          ['<S-Tab>'] = cmp.mapping(function(fallback)
+            if cmp.visible() then
+              cmp.select_prev_item()
+            else
+              fallback()
+            end
+          end, { 'i', 's' }),
 
           -- Think of <c-l> as moving to the right of your snippet expansion.
           --  So if you have a snippet that's like:
           --  function $name($args)
           --    $body
           --  end
-          --
           -- <c-l> will move you to the right of each of the expansion locations.
-          -- <c-h> is similar, except moving you backwards.
           ['<C-l>'] = cmp.mapping(function()
             if luasnip.expand_or_locally_jumpable() then
               luasnip.expand_or_jump()
             end
           end, { 'i', 's' }),
+          -- <c-h> is similar, except moving you backwards.
           ['<C-h>'] = cmp.mapping(function()
             if luasnip.locally_jumpable(-1) then
               luasnip.jump(-1)
             end
           end, { 'i', 's' }),
+          -- Scroll the documentation window [b]ack / [f]orward
+          ['<C-b>'] = cmp.mapping.scroll_docs(-4),
+          ['<C-f>'] = cmp.mapping.scroll_docs(4),
+
+          -- Manually trigger a completion from nvim-cmp.
+          --  Generally you don't need this, because nvim-cmp will display
+          --  completions whenever it has completion options available.
+          ['<C-Space>'] = cmp.mapping.complete {},
 
           -- For more advanced Luasnip keymaps (e.g. selecting choice nodes, expansion) see:
           --    https://github.com/L3MON4D3/LuaSnip?tab=readme-ov-file#keymaps
+          --    change c+y into loop the option (you?)
+          ['<C-y>'] = cmp.mapping(function()
+            if luasnip.choice_active() then
+              luasnip.change_choice(1)
+            end
+          end, { silent = true }, { 'i', 's' }),
         },
         sources = {
           {
@@ -792,10 +839,33 @@ require('lazy').setup({
           },
           { name = 'otter' },
           { name = 'nvim_lsp' },
-          { name = 'luasnip' },
           { name = 'path' },
+          { name = 'nvim_lsp_signature_help' },
+          { name = 'luasnip', keyword_length = 3 },
+          { name = 'pandoc_references' },
+          { name = 'buffer', keyword_length = 5, max_item_count = 3 },
+          { name = 'spell' },
+          { name = 'treesitter', keyword_length = 5, max_item_count = 3 },
+          { name = 'calc' },
+          { name = 'latex_symbols' },
+          { name = 'emoji' },
+        },
+        view = {
+          entries = 'native',
+        },
+        window = {
+          documentation = {
+            border = require('misc.style').border,
+          },
         },
       }
+      -- for friendly snippets
+      require('luasnip.loaders.from_vscode').lazy_load()
+      -- for custom snippets
+      require('luasnip.loaders.from_vscode').lazy_load { paths = { vim.fn.stdpath 'config' .. '/snips' } }
+      -- link quarto and rmarkdown to markdown snippets
+      luasnip.filetype_extend('quarto', { 'markdown' })
+      luasnip.filetype_extend('rmarkdown', { 'markdown' })
     end,
   },
 
@@ -1048,6 +1118,8 @@ require('lazy').setup({
   -- quarto
   {
     'quarto-dev/quarto-nvim',
+    ft = { 'quarto' },
+    dev = false,
     opts = {},
     dependencies = {
       -- for language features in code cells
@@ -1226,6 +1298,31 @@ require('lazy').setup({
       ui = {
         enable = false, -- set to false to disable all additional syntax featuresA
       },
+      -- Specify how to handle attachments.
+      attachments = {
+        -- The default folder to place images in via `:ObsidianPasteImg`.
+        -- If this is a relative path it will be interpreted as relative to the vault root.
+        -- You can always override this per image by passing a full path to the command instead of just a filename.
+        img_folder = '3. Resource/assets', -- This is the default
+
+        -- Optional, customize the default name or prefix when pasting images via `:ObsidianPasteImg`.
+        ---@return string
+        img_name_func = function()
+          -- Prefix image names with timestamp.
+          return string.format('%s-', os.time())
+        end,
+
+        -- A function that determines the text to insert in the note when pasting an image.
+        -- It takes two arguments, the `obsidian.Client` and an `obsidian.Path` to the image file.
+        -- This is the default implementation.
+        ---@param client obsidian.Client
+        ---@param path obsidian.Path the absolute path to the image file
+        ---@return string
+        img_text_func = function(client, path)
+          path = client:vault_relative_path(path) or path
+          return string.format('![%s](%s)', path.name, path)
+        end,
+      },
     },
     config = function(_, opts)
       require('obsidian').setup(opts)
@@ -1261,18 +1358,23 @@ require('lazy').setup({
             download_remote_images = true,
             only_render_image_at_cursor = true,
             -- floating_windows = true, -- if true, images will be rendered in floating markdown windows
-            filetypes = { 'markdown', 'vimwiki', 'q' }, -- markdown extensions (ie. quarto) can go here
-            -- resolve_image_path = function(document_path, image_path, fallback)
-            --   local ob = require 'obsidian'
-            --   -- Format image path for Obsidian notes
-            --   local obc = ob.get_client()
-            --   local working_dir = obc.current_workspace.path.filename
-            --   if working_dir:find '3. Resource/assets/' then
-            --     return working_dir .. '/' .. image_path
-            --   end
-            --   -- Fallback to the default behavior
-            --   return fallback(document_path, image_path)
-            -- end,
+            filetypes = { 'markdown', 'vimwiki', 'quarto' }, -- markdown extensions (ie. quarto) can go here
+            resolve_image_path = function(document_path, image_path, fallback)
+              local obsidian_client = require('obsidian').get_client()
+              -- Check if the image_path is already an absolute path, so far path start with ~ doesn't work by this approach
+              if image_path:match '^/|^~' then
+                -- If it's an absolute path, leave it unchanged
+                return image_path
+              end
+              -- Construct the new image path by prepending the Assets directory
+              local new_image_path = obsidian_client:vault_relative_path(image_path).filename
+              -- Check if the constructed path exists
+              if vim.fn.filereadable(new_image_path) == 1 then
+                return new_image_path
+              else
+                return fallback(document_path, image_path)
+              end
+            end,
           },
           neorg = {
             enabled = true,
@@ -1518,7 +1620,7 @@ require('lazy').setup({
             return require('codecompanion.adapters').extend('ollama', {
               schema = {
                 model = {
-                  default = 'qwen2.5-coder',
+                  default = 'deepseek-r1:7b',
                 },
                 num_ctx = {
                   default = 40960,
@@ -1555,7 +1657,7 @@ require('lazy').setup({
           __inherited_from = 'openai',
           api_key_name = '',
           endpoint = '127.0.0.1:11434/v1',
-          model = 'qwen2.5-coder',
+          model = 'deepseek-r1:7b',
           -- model = 'mistral',
           -- model = 'opencoder',
           parse_response_data = function(data_stream, event_state, opts)
