@@ -1330,6 +1330,11 @@ require('lazy').setup({
       -- see also: 'follow_url_func' config option below.
     end,
   },
+  -- {
+  --   'k-lar/dynomark.nvim',
+  --   dependencies = 'nvim-treesitter/nvim-treesitter',
+  --   opts = {},
+  -- },
   {
     'vhyrro/luarocks.nvim',
     priority = 1001,
@@ -1419,7 +1424,7 @@ require('lazy').setup({
   {
     'benlubas/molten-nvim',
     dependencies = { '3rd/image.nvim' },
-    version = '^1.0.0', -- use version <2.0.0 to avoid breaking changes
+    -- version = '^1.0.0', -- use version <2.0.0 to avoid breaking changes
     build = ':UpdateRemotePlugins',
     init = function()
       -- this is an example, not a default. Please see the readme for more configuration options
@@ -1547,6 +1552,12 @@ require('lazy').setup({
       }
     end,
   },
+  {
+    'nvzone/typr',
+    dependencies = 'nvzone/volt',
+    opts = {},
+    cmd = { 'Typr', 'TyprStats' },
+  },
   --project
   {
     'ahmedkhalf/project.nvim',
@@ -1653,31 +1664,30 @@ require('lazy').setup({
       vendors = {
         -- ---@type AvanteProvider --local ollama
         ollama = {
-          -- ['local'] = true,
           __inherited_from = 'openai',
           api_key_name = '',
           endpoint = '127.0.0.1:11434/v1',
           model = 'deepseek-r1:7b',
           -- model = 'mistral',
           -- model = 'opencoder',
-          parse_response_data = function(data_stream, event_state, opts)
-            require('avante.providers').copilot.parse_response(data_stream, event_state, opts)
-          end,
-          parse_curl_args = function(opts, code_opts)
-            return {
-              url = opts.endpoint .. '/chat/completions',
-              headers = {
-                ['Accept'] = 'application/json',
-                ['Content-Type'] = 'application/json',
-              },
-              body = {
-                model = opts.model,
-                messages = require('avante.providers').copilot.parse_messages(code_opts),
-                -- max_tokens = 2048,
-                stream = true,
-              },
-            }
-          end,
+          -- parse_response_data = function(data_stream, event_state, opts)
+          --   require('avante.providers').openai.parse_response(data_stream, event_state, opts)
+          -- end,
+          -- parse_curl_args = function(opts, code_opts)
+          --   return {
+          --     url = opts.endpoint .. '/chat/completions',
+          --     headers = {
+          --       ['Accept'] = 'application/json',
+          --       ['Content-Type'] = 'application/json',
+          --     },
+          --     body = {
+          --       model = opts.model,
+          --       messages = require('avante.providers').copilot.parse_messages(code_opts),
+          --       -- max_tokens = 2048,
+          --       stream = true,
+          --     },
+          -- }
+          -- end,
         },
         ---@type AvanteProvider --/// ELI
         -- ollama = {
