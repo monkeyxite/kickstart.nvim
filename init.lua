@@ -625,6 +625,8 @@ require('lazy').setup({
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
       require('mason-lspconfig').setup {
+        ensure_installed = {}, -- explicitly set to an empty table (Kickstart populates installs via mason-tool-installer)
+        automatic_installation = false,
         handlers = {
           function(server_name)
             local server = servers[server_name] or {}
@@ -1076,6 +1078,9 @@ require('lazy').setup({
   },
   { -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
+    dependencies = {
+      'nvim-treesitter/nvim-treesitter-textobjects',
+    },
     build = ':TSUpdate',
     main = 'nvim-treesitter.configs', -- Sets main module to use for opts
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
@@ -1127,6 +1132,32 @@ require('lazy').setup({
       -- added as a nvim-cmp source in lua/plugins/completion.lua
       'jmbuhr/otter.nvim',
     },
+    config = function()
+      require('quarto').setup {
+        lspFeatures = {
+          languages = { 'r', 'python', 'rust' },
+          chunks = 'all',
+          diagnostics = {
+            enabled = true,
+            triggers = { 'BufWritePost' },
+          },
+          completion = {
+            enabled = true,
+          },
+        },
+        keymap = {
+          hover = 'H',
+          definition = 'gd',
+          rename = '<leader>rn',
+          references = 'gr',
+          format = '<leader>gf',
+        },
+        codeRunner = {
+          enabled = true,
+          default_method = 'molten',
+        },
+      }
+    end,
   },
   {
     'jpalardy/vim-slime',
@@ -1240,7 +1271,7 @@ require('lazy').setup({
     dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' }, -- if you prefer nvim-web-devicons
   },
   {
-    'epwalsh/obsidian.nvim',
+    'obsidian-nvim/obsidian.nvim',
     version = '*',
     lazy = true,
     ft = { 'markdown', 'qmd', 'quarto' },
@@ -1344,17 +1375,19 @@ require('lazy').setup({
   },
   {
     '3rd/image.nvim',
+    commit = '2e2d28b',
     event = 'VeryLazy',
     build = false,
-    dependencies = {
-      -- 'kiyoon/magick.nvim',
-      'luarocks.nvim',
-    },
+    -- dependencies = {
+    --   -- 'kiyoon/magick.nvim',
+    --   'luarocks.nvim',
+    -- },
     config = function()
       -- -- default config
       require('image').setup {
         backend = 'kitty',
         kitty_method = 'normal',
+        processor = 'magick_rock',
         -- processor = 'magick_rock', -- or "magick_cli"
         integrations = {
           markdown = {
@@ -1362,12 +1395,13 @@ require('lazy').setup({
             clear_in_insert_mode = false,
             download_remote_images = true,
             only_render_image_at_cursor = true,
+            only_render_image_at_cursor_mode = 'popup',
             -- floating_windows = true, -- if true, images will be rendered in floating markdown windows
             filetypes = { 'markdown', 'vimwiki', 'quarto' }, -- markdown extensions (ie. quarto) can go here
             resolve_image_path = function(document_path, image_path, fallback)
               local obsidian_client = require('obsidian').get_client()
               -- Check if the image_path is already an absolute path, so far path start with ~ doesn't work by this approach
-              if image_path:match '^/|^~' then
+              if image_path:match '^/' then
                 -- If it's an absolute path, leave it unchanged
                 return image_path
               end
@@ -1395,28 +1429,37 @@ require('lazy').setup({
             enabled = false,
           },
         },
-        max_width = 100,
-        max_height = 12,
+        -- max_width = 100,
+        -- max_height = 12,
         max_height_window_percentage = math.huge,
         max_width_window_percentage = math.huge,
-        -- window_overlap_clear_enabled = true,
-        -- window_overlap_clear_ft_ignore = { 'cmp_menu', 'cmp_docs', '' },
-        -- editor_only_render_when_focused = false, -- auto show/hide images when the editor gains/looses focus
         tmux_show_only_in_active_window = true, -- auto show/hide images in the correct Tmux window (needs visual-activity off)
+        max_width = nil,
+        max_height = nil,
+        -- max_width_window_percentage = nil,
+        -- -- max_height_window_percentage = 50,
+        -- window_overlap_clear_enabled = false, -- toggles images when windows are overlapped
+        window_overlap_clear_ft_ignore = { 'cmp_menu', 'cmp_docs', 'snacks_notif', 'scrollview', 'scrollview_sign' },
+        editor_only_render_when_focused = false, -- auto show/hide images when the editor gains/looses focus
+        -- tmux_show_only_in_active_window = false, -- auto show/hide images in the correct Tmux window (needs visual-activity off)
         hijack_file_patterns = { '*.png', '*.jpg', '*.jpeg', '*.gif', '*.webp', '*.avif' }, -- render image files as images when opened
       }
+      --   -- window_overlap_clear_enabled = true,
+      --   -- window_overlap_clear_ft_ignore = { 'cmp_menu', 'cmp_docs', '' },
+      --   -- editor_only_render_when_focused = false, -- auto show/hide images when the editor gains/looses focus
+      -- }
     end,
     -- opts = {
-    --     init = function()
-    --     package.path = package.path .. ";" .. vim.fn.expand("$HOME") .. "/.luarocks/share/lua/5.1/magick/init.lua;"
-    --     package.path = package.path .. ";" .. vim.fn.expand("$HOME") .. "/.luarocks/share/lua/5.1/magick/?.lua;"
-    --     local ok, err = pcall(require, "magick")
+    --   init = function()
+    --     package.path = package.path .. ';' .. vim.fn.expand '$HOME' .. '/.luarocks/share/lua/5.1/magick/init.lua;'
+    --     package.path = package.path .. ';' .. vim.fn.expand '$HOME' .. '/.luarocks/share/lua/5.1/magick/?.lua;'
+    --     local ok, err = pcall(require, 'magick')
     --     if ok then
-    --       print("that worked")
+    --       print 'that worked'
     --     else
-    --       print("that failed")
+    --       print 'that failed'
     --     end
-    -- end,
+    --   end,
     -- },
     -- version = '1.1.0', -- or comment out for latest
   },
@@ -1448,7 +1491,7 @@ require('lazy').setup({
       -- add a few new things
 
       -- don't change the mappings (unless it's related to your bug)
-      vim.keymap.set('n', '<localleader>mi', ':MoltenInit<CR>')
+      vim.keymap.set('n', '<localleader>ii', ':MoltenInit<CR>', { desc = '[i]Python[i]nit' })
       vim.keymap.set('n', '<localleader>ip', function()
         local venv = os.getenv 'VIRTUAL_ENV'
         if venv ~= nil then
@@ -1460,12 +1503,12 @@ require('lazy').setup({
         end
       end, { desc = 'Initialize Molten for python3', silent = true })
 
-      vim.keymap.set('n', '<localleader>e', ':MoltenEvaluateOperator<CR>')
-      vim.keymap.set('n', '<localleader>rr', ':MoltenReevaluateCell<CR>')
-      vim.keymap.set('v', '<localleader>r', ':<C-u>MoltenEvaluateVisual<CR>gv')
-      vim.keymap.set('n', '<localleader>os', ':noautocmd MoltenEnterOutput<CR>')
-      vim.keymap.set('n', '<localleader>oh', ':MoltenHideOutput<CR>')
-      vim.keymap.set('n', '<localleader>md', ':MoltenDelete<CR>')
+      vim.keymap.set('n', '<localleader>e', ':MoltenEvaluateOperator<CR>', { desc = 'iPy[e]valuateOperator' })
+      vim.keymap.set('n', '<localleader>r', ':MoltenReevaluateCell<CR>', { desc = 'iPy[r]eevaluatate' })
+      vim.keymap.set('v', '<localleader>r', ':<C-u>MoltenEvaluateVisual<CR>gv', { desc = 'iPy[r]un' })
+      vim.keymap.set('n', '<localleader>io', ':noautocmd MoltenEnterOutput<CR>', { desc = '[i]Py[o]utEnter' })
+      vim.keymap.set('n', '<localleader>iho', ':MoltenHideOutput<CR>', { desc = '[i]Py[h]ide[o]ut' })
+      vim.keymap.set('n', '<localleader>id', ':MoltenDelete<CR>', { desc = '[i]Py[d]elte' })
     end,
   },
   -- SymbolOutline
@@ -1652,84 +1695,43 @@ require('lazy').setup({
     lazy = false,
     version = false, -- set this if you want to always pull the latest change
     opts = {
-      -- dual_boost = {
-      --   enabled = true,
-      --   first_provider = 'ollama',
-      --   second_provider = 'ELI',
-      --   prompt = 'Based on the two reference outputs below, generate a response that incorporates elements from both but reflects your own judgment and unique perspective. Do not provide any explanation, just give the response directly. Reference Output 1: {{provider1_output}}, Reference Output 2: {{provider2_output}}',
-      --   timeout = 60000, -- Timeout in milliseconds
-      -- },
-      -- add any opts here
-      provider = 'ollama',
-      vendors = {
-        -- ---@type AvanteProvider --local ollama
+      providers = {
+        -- dual_boost = {
+        --   enabled = true,
+        --   first_provider = 'ollama',
+        --   second_provider = 'ELI',
+        --   prompt = 'Based on the two reference outputs below, generate a response that incorporates elements from both but reflects your own judgment and unique perspective. Do not provide any explanation, just give the response directly. Reference Output 1: {{provider1_output}}, Reference Output 2: {{provider2_output}}',
+        --   timeout = 60000, -- Timeout in milliseconds
+        -- },
+        -- add any opts here
         ollama = {
-          __inherited_from = 'openai',
-          api_key_name = '',
-          endpoint = '127.0.0.1:11434/v1',
+          endpoint = '127.0.0.1:11434',
           model = 'deepseek-r1:7b',
           -- model = 'mistral',
           -- model = 'opencoder',
-          -- parse_response_data = function(data_stream, event_state, opts)
-          --   require('avante.providers').openai.parse_response(data_stream, event_state, opts)
-          -- end,
-          -- parse_curl_args = function(opts, code_opts)
-          --   return {
-          --     url = opts.endpoint .. '/chat/completions',
-          --     headers = {
-          --       ['Accept'] = 'application/json',
-          --       ['Content-Type'] = 'application/json',
-          --     },
-          --     body = {
-          --       model = opts.model,
-          --       messages = require('avante.providers').copilot.parse_messages(code_opts),
-          --       -- max_tokens = 2048,
-          --       stream = true,
-          --     },
-          -- }
-          -- end,
         },
-        ---@type AvanteProvider --/// ELI
+        -- @type AvanteProvider --/// ELI
         -- ollama = {
-        --   __inherited_from = 'openai',
         --   endpoint = os.getenv 'ELI_API_URL',
         --   api_key_name = 'ELI_API_KEY',
         --   model = 'qwen2.5-7b',
         --   -- model = 'mistral',
         --   -- model = 'opencoder',
-        --   parse_response_data = function(data_stream, event_state, opts)
-        --     require('avante.providers').copilot.parse_response(data_stream, event_state, opts)
-        --   end,
-        --   parse_curl_args = function(opts, code_opts)
-        --     return {
-        --       url = opts.endpoint .. 'llm/chat_stream/',
-        --       headers = {
-        --         ['Accept'] = 'application/json',
-        --         ['Content-Type'] = 'application/json',
-        --       },
-        --       body = {
-        --         model = opts.model,
-        --         messages = require('avante.providers').copilot.parse_messages(code_opts),
-        --         max_new_tokens = 2048,
-        --         stream = true,
-        --       },
-        --     }
-        --   end,
+        -- },
+
+        -- provider = 'cclaude', -- Recommend using Claude
+        -- auto_suggestions_provider = 'cclaude', -- Since auto-suggestions are a high-frequency operation and therefore expensive, it is recommended to specify an inexpensive provider or even a free provider: copilot
+        -- vendors = {
+        --   cclaude = {
+        --     __inherited_from = 'openai',
+        --     endpoint = 'mj.chatgptten.com/v1',
+        --     api_key_name = 'CLAUDE_API_KEY',
+        --     model = 'claude-3-5-sonnet-20241022',
+        --     temperature = 0,
+        --     max_tokens = 4096,
+        --   },
         -- },
       },
-
-      -- provider = 'cclaude', -- Recommend using Claude
-      -- auto_suggestions_provider = 'cclaude', -- Since auto-suggestions are a high-frequency operation and therefore expensive, it is recommended to specify an inexpensive provider or even a free provider: copilot
-      -- vendors = {
-      --   cclaude = {
-      --     __inherited_from = 'openai',
-      --     endpoint = 'mj.chatgptten.com/v1',
-      --     api_key_name = 'CLAUDE_API_KEY',
-      --     model = 'claude-3-5-sonnet-20241022',
-      --     temperature = 0,
-      --     max_tokens = 4096,
-      --   },
-      -- },
     },
     -- if you want to build from source then do `make BUILD_FROM_SOURCE=true`
     build = 'make',
@@ -1775,6 +1777,16 @@ require('lazy').setup({
     -- config = function()
     --   require('bufferline').setup {}
     -- end,
+  },
+  -- Better helpview for nvim
+  {
+    'OXY2DEV/helpview.nvim',
+    lazy = false,
+    opts = {
+      preview = {
+        icon_provider = 'mini', -- "mini" or "devicons"
+      },
+    },
   },
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
