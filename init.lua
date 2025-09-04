@@ -1271,6 +1271,22 @@ require('lazy').setup({
     dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' }, -- if you prefer nvim-web-devicons
   },
   {
+    'folke/snacks.nvim',
+    opts = {
+      image = {
+        -- your image configuration comes here
+        -- or leave it empty to use the default settings
+        -- refer to the configuration section below
+        resolve = function(path, src)
+          if require('obsidian.api').path_is_note(path) then
+            -- for setting both image review & paste if needed
+            return require('obsidian.api').resolve_image_path(src):gsub('3_Resource/assets/3_Resource/assets', '3_Resource/assets')
+          end
+        end,
+      },
+    },
+  },
+  {
     'obsidian-nvim/obsidian.nvim',
     version = '*',
     lazy = true,
@@ -1334,8 +1350,8 @@ require('lazy').setup({
         -- The default folder to place images in via `:ObsidianPasteImg`.
         -- If this is a relative path it will be interpreted as relative to the vault root.
         -- You can always override this per image by passing a full path to the command instead of just a filename.
-        img_folder = '3. Resource/assets', -- This is the default
-
+        -- not need with snacks.image
+        img_folder = '3_Resource/assets', -- This is the default
         -- Optional, customize the default name or prefix when pasting images via `:ObsidianPasteImg`.
         ---@return string
         img_name_func = function()
@@ -1367,6 +1383,24 @@ require('lazy').setup({
   --   opts = {},
   -- },
   {
+    'josephburgess/nvumi',
+    dependencies = { 'folke/snacks.nvim' },
+    opts = {
+      virtual_text = 'inline', -- or "newline"
+      prefix = ' 🚀 ', -- prefix shown before the output
+      date_format = 'iso', -- or: "uk", "us", "long"
+      keys = {
+        run = '<CR>', -- run/refresh calculations
+        reset = 'R', -- reset buffer
+        yank = '<leader>y', -- yank output of current line
+        yank_all = '<leader>Y', -- yank all outputs
+      },
+      -- see below for more on custom conversions/functions
+      custom_conversions = {},
+      custom_functions = {},
+    },
+  },
+  {
     'vhyrro/luarocks.nvim',
     priority = 1001,
     opts = {
@@ -1397,23 +1431,23 @@ require('lazy').setup({
             only_render_image_at_cursor = true,
             only_render_image_at_cursor_mode = 'popup',
             -- floating_windows = true, -- if true, images will be rendered in floating markdown windows
-            filetypes = { 'markdown', 'vimwiki', 'quarto' }, -- markdown extensions (ie. quarto) can go here
-            resolve_image_path = function(document_path, image_path, fallback)
-              local obsidian_client = require('obsidian').get_client()
-              -- Check if the image_path is already an absolute path, so far path start with ~ doesn't work by this approach
-              if image_path:match '^/' then
-                -- If it's an absolute path, leave it unchanged
-                return image_path
-              end
-              -- Construct the new image path by prepending the Assets directory
-              local new_image_path = obsidian_client:vault_relative_path(image_path).filename
-              -- Check if the constructed path exists
-              if vim.fn.filereadable(new_image_path) == 1 then
-                return new_image_path
-              else
-                return fallback(document_path, image_path)
-              end
-            end,
+            filetypes = { 'vimwiki', 'quarto' }, -- markdown extensions (ie. quarto) can go here
+            -- resolve_image_path = function(document_path, image_path, fallback)
+            --   local obsidian_client = require('obsidian').get_client()
+            --   -- Check if the image_path is already an absolute path, so far path start with ~ doesn't work by this approach
+            --   if image_path:match '^/' then
+            --     -- If it's an absolute path, leave it unchanged
+            --     return image_path
+            --   end
+            --   -- Construct the new image path by prepending the Assets directory
+            --   local new_image_path = obsidian_client:vault_relative_path(image_path).filename
+            --   -- Check if the constructed path exists
+            --   if vim.fn.filereadable(new_image_path) == 1 then
+            --     return new_image_path
+            --   else
+            --     return fallback(document_path, image_path)
+            --   end
+            -- end,
           },
           neorg = {
             enabled = true,
@@ -1467,7 +1501,7 @@ require('lazy').setup({
   {
     'benlubas/molten-nvim',
     dependencies = { '3rd/image.nvim' },
-    -- version = '^1.0.0', -- use version <2.0.0 to avoid breaking changes
+    version = '^1.1.0', -- use version <2.0.0 to avoid breaking changes
     build = ':UpdateRemotePlugins',
     init = function()
       -- this is an example, not a default. Please see the readme for more configuration options
