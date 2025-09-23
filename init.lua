@@ -125,6 +125,10 @@ vim.keymap.set('n', '<leader>bco', ':BufferLineCloseOthers<CR>', { noremap = tru
 
 --dashboard
 vim.keymap.set('n', '<leader>;', ':lua MiniStarter.open()<CR>', { noremap = true, desc = 'Dashboard[;]' })
+
+--code
+vim.keymap.set('n', '<leader>cz', ':lua Snacks.zen()<CR>', { noremap = true, desc = 'Toggle [Z]en mode' })
+
 --file tree toggle
 vim.keymap.set('n', '<leader>e', ':lua MiniFiles.open()<CR>', { noremap = true, desc = '[e]xplorer files' })
 vim.keymap.set('n', '<leader>te', ':NvimTreeToggle<CR>', { noremap = true, desc = '[T]oggle[e]xplorer' })
@@ -133,10 +137,11 @@ vim.keymap.set('n', '<leader>te', ':NvimTreeToggle<CR>', { noremap = true, desc 
 vim.keymap.set({ 'n', 'i' }, '<M-i>', '<esc>o```{python}<cr>```<esc>O', { desc = '[i]nsert python code chunk' })
 -- IPython Term
 vim.keymap.set({ 'n' }, '<leader>ci', ':split term://ipython<cr>', { desc = '[c]ode [i]python' })
+
 -- AI
-vim.keymap.set({ 'n', 'v' }, '<leader>acc', ':CodeCompanionChat Toggle<cr>', { desc = '[A]I[C]ompanion[C]hat toggle' })
-vim.keymap.set({ 'n', 'v' }, '<leader>aca', ':CodeCompanionActions<cr>', { desc = '[A]I[C]ompanion[A]ction' })
-vim.keymap.set({ 'v' }, '<leader>acl', ':CodeCompanionChat Add<cr>', { desc = '[A]I[C]ompanion add [V]isual' })
+vim.keymap.set({ 'n', 'v' }, '<leader>ccc', ':CodeCompanionChat Toggle<cr>', { desc = '[A]I[C]ompanion[C]hat toggle' })
+vim.keymap.set({ 'n', 'v' }, '<leader>cca', ':CodeCompanionActions<cr>', { desc = '[A]I[C]ompanion[A]ction' })
+vim.keymap.set({ 'v' }, '<leader>ccv', ':CodeCompanionChat Add<cr>', { desc = '[A]I[C]ompanion add [V]isual' })
 
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
@@ -1273,10 +1278,22 @@ require('lazy').setup({
   {
     'folke/snacks.nvim',
     opts = {
+      notifier = {
+        enabled = true,
+        style = 'compact',
+        timeout = 2500,
+      },
       image = {
+        enabled = true,
         -- your image configuration comes here
         -- or leave it empty to use the default settings
         -- refer to the configuration section below
+        doc = {
+          inline = true,
+          float = true,
+          max_width = 800,
+          max_height = 400,
+        },
         resolve = function(path, src)
           if require('obsidian.api').path_is_note(path) then
             -- for setting both image review & paste if needed
@@ -1284,6 +1301,8 @@ require('lazy').setup({
           end
         end,
       },
+      zen = {},
+      bigfile = {},
     },
   },
   {
@@ -1315,11 +1334,11 @@ require('lazy').setup({
       workspaces = {
         {
           name = 'personal',
-          path = '~/knowledgebase',
+          path = '/Users/ehoujin/knowledgebase',
         },
         {
           name = 'work',
-          path = '~/OneDrive - Ericsson/Documents/Radio_KB',
+          path = '/Users/ehoujin/OneDrive - Ericsson/Documents/Radio_KB',
         },
         {
           name = 'asgard',
@@ -1400,6 +1419,46 @@ require('lazy').setup({
       custom_functions = {},
     },
   },
+  -- {
+  --   '3rd/diagram.nvim',
+  --   dependencies = {
+  --     { '3rd/image.nvim', opts = {} }, -- you'd probably want to configure image.nvim manually instead of doing this
+  --   },
+  --   opts = { -- you can just pass {}, defaults below
+  --     events = {
+  --       render_buffer = { 'InsertLeave', 'BufWinEnter', 'TextChanged' },
+  --       clear_buffer = { 'BufLeave' },
+  --     },
+  --     renderer_options = {
+  --       mermaid = {
+  --         background = nil, -- nil | "transparent" | "white" | "#hex"
+  --         theme = nil, -- nil | "default" | "dark" | "forest" | "neutral"
+  --         scale = 1, -- nil | 1 (default) | 2  | 3 | ...
+  --         width = nil, -- nil | 800 | 400 | ...
+  --         height = nil, -- nil | 600 | 300 | ...
+  --         cli_args = nil, -- nil | { "--no-sandbox" } | { "-p", "/path/to/puppeteer" } | ...
+  --       },
+  --       plantuml = {
+  --         charset = nil,
+  --         cli_args = nil, -- nil | { "-Djava.awt.headless=true" } | ...
+  --       },
+  --       d2 = {
+  --         theme_id = nil,
+  --         dark_theme_id = nil,
+  --         scale = nil,
+  --         layout = nil,
+  --         sketch = nil,
+  --         cli_args = nil, -- nil | { "--pad", "0" } | ...
+  --       },
+  --       gnuplot = {
+  --         size = nil, -- nil | "800,600" | ...
+  --         font = nil, -- nil | "Arial,12" | ...
+  --         theme = nil, -- nil | "light" | "dark" | custom theme string
+  --         cli_args = nil, -- nil | { "-p" } | { "-c", "config.plt" } | ...
+  --       },
+  --     },
+  --   },
+  -- },
   {
     'vhyrro/luarocks.nvim',
     priority = 1001,
@@ -1660,6 +1719,7 @@ require('lazy').setup({
     },
   },
   --AI
+  -- { 'Joakker/lua-json5' },
   {
     'olimorris/codecompanion.nvim',
     dependencies = {
@@ -1668,12 +1728,29 @@ require('lazy').setup({
     },
     config = function()
       require('codecompanion').setup {
+        extensions = {
+          mcphub = {
+            callback = 'mcphub.extensions.codecompanion',
+            opts = {
+              -- MCP Tools
+              make_tools = true, -- Make individual tools (@server__tool) and server groups (@server) from MCP servers
+              show_server_tools_in_chat = true, -- Show individual tools in chat completion (when make_tools=true)
+              add_mcp_prefix_to_tool_names = false, -- Add mcp__ prefix (e.g `@mcp__github`, `@mcp__neovim__list_issues`)
+              show_result_in_chat = true, -- Show tool results directly in chat buffer
+              format_tool = nil, -- function(tool_name:string, tool: CodeCompanion.Agent.Tool) : string Function to format tool names to show in the chat buffer
+              -- MCP Resources
+              make_vars = true, -- Convert MCP resources to #variables for prompts
+              -- MCP Prompts
+              make_slash_commands = true, -- Add MCP prompts as /slash commands
+            },
+          },
+        },
         strategies = {
           agent = {
             adapter = 'llm',
           },
           chat = {
-            adapter = 'llm', -- copilot defaults to claude-sonent now! 🎉
+            adapter = 'gemini_cli', -- copilot defaults to claude-sonent now! 🎉
           },
           inline = {
             adapter = 'llm',
@@ -1688,6 +1765,21 @@ require('lazy').setup({
           log_level = 'DEBUG',
         },
         adapters = {
+          acp = {
+            gemini_cli = function()
+              return require('codecompanion.adapters').extend('gemini_cli', {
+                defaults = {
+                  -- auth_method = "gemini-api-key", -- "oauth-personal" | "gemini-api-key" | "vertex-ai"
+                  auth_method = 'gemini-api-key',
+                },
+                env = {
+                  -- GEMINI_API_KEY = vim.env.GEMINI_API_KEY,
+                  -- api_key = 'cmd:pass show ai/gemini',
+                  GEMINI_API_KEY = 'cmd:pass show ai/gemini',
+                },
+              })
+            end,
+          },
           llm = function()
             --cclaude
             -- return require('codecompanion.adapters').extend('openai_compatible', {
@@ -1724,11 +1816,33 @@ require('lazy').setup({
     end,
   },
   {
+    'ravitemer/mcphub.nvim',
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+    },
+    build = 'npm install -g mcp-hub@latest', -- Installs `mcp-hub` node binary globally
+    config = function()
+      require('mcphub').setup()
+    end,
+  },
+  {
     'yetone/avante.nvim',
     event = 'VeryLazy',
     lazy = false,
     version = false, -- set this if you want to always pull the latest change
     opts = {
+      provider = 'gemini-cli',
+      acp_providers = {
+        ['gemini-cli'] = {
+          command = 'gemini',
+          args = { '--experimental-acp' },
+          env = {
+            NODE_NO_WARNINGS = '1',
+            GEMINI_API_KEY = 'cmd:pass show ai/gemini',
+          },
+          auth_method = 'gemini-api-key',
+        },
+      },
       providers = {
         -- dual_boost = {
         --   enabled = true,
