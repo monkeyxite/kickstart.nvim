@@ -1800,7 +1800,9 @@ require('lazy').setup({
             return require('codecompanion.adapters').extend('ollama', {
               schema = {
                 model = {
-                  default = 'deepseek-r1:7b',
+                  -- default = 'deepseek-r1:8b',
+                  default = 'hf.co/unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF:UD-Q5_K_XL',
+                  -- default = 'llama3.2:3b',
                 },
                 num_ctx = {
                   default = 40960,
@@ -1854,7 +1856,7 @@ require('lazy').setup({
         -- add any opts here
         ollama = {
           endpoint = '127.0.0.1:11434',
-          model = 'deepseek-r1:7b',
+          model = 'hf.co/unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF:UD-Q5_K_XL',
           -- model = 'mistral',
           -- model = 'opencoder',
         },
