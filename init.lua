@@ -733,9 +733,17 @@ require('lazy').setup({
         lua = { 'stylua' },
         -- Conform can also run multiple formatters sequentially
         -- python = { "isort", "black" },
+        markdown = { 'markdownlint-cli2', stop_after_first = true },
         --
         -- You can use 'stop_after_first' to run the first available formatter from the list
-        -- javascript = { "prettierd", "prettier", stop_after_first = true },
+        -- javascript = { , "prettier", stop_after_first = true },
+      },
+      opts = {
+        formatters = {
+          ['markdownlint-cli2'] = {
+            args = { '--config', vim.fn.expand '$HOME/.markdownlint-cli2.yaml', '--fix', '$FILENAME' },
+          },
+        },
       },
     },
   },
@@ -1102,7 +1110,7 @@ require('lazy').setup({
   --
   -- require 'kickstart.plugins.debug',
   -- require 'kickstart.plugins.indent_line',
-  -- require 'kickstart.plugins.lint',
+  require 'kickstart.plugins.lint',
   -- require 'kickstart.plugins.autopairs',
   -- require 'kickstart.plugins.neo-tree',
   -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
@@ -1217,6 +1225,26 @@ require('lazy').setup({
     config = function()
       vim.g.mkdp_auto_start = 1
       vim.g.mkdp_filetypes = { 'markdown', 'quarto' }
+    end,
+  },
+  -- markdown editing helper
+  {
+    'yousefhadder/markdown-plus.nvim',
+    ft = 'markdown',
+    config = function()
+      require('markdown-plus').setup {
+        -- Configuration options (all optional)
+        enabled = true,
+        features = {
+          list_management = true, -- Enable list management features
+          text_formatting = true, -- Enable text formatting features
+          headers_toc = true, -- Enable headers and TOC features
+          links = true, -- Enable link management features
+        },
+        keymaps = {
+          enabled = true, -- Enable default keymaps
+        },
+      }
     end,
   },
   --toggle term

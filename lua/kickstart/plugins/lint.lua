@@ -3,12 +3,24 @@ return {
   { -- Linting
     'mfussenegger/nvim-lint',
     event = { 'BufReadPre', 'BufNewFile' },
-    config = function()
+    opts = {
+      linters = {
+        ['markdownlint-cli2'] = {
+          args = { '--config', vim.fn.expand '$HOME/.markdownlint-cli2.yaml', '--' },
+        },
+      },
+    },
+    config = function(_, opts)
       local lint = require 'lint'
       lint.linters_by_ft = {
-        markdown = { 'markdownlint' },
+        markdown = { 'markdownlint-cli2' },
       }
-
+      -- pick opts into linter definition
+      for name, linter in pairs(opts.linters or {}) do
+        local base = lint.linters[name]
+        lint.linters[name] = (type(linter) == 'table' and type(base) == 'table') and vim.tbl_deep_extend('force', base, linter) or linter
+      end
+      --
       -- To allow other plugins to add linters to require('lint').linters_by_ft,
       -- instead set linters_by_ft like this:
       -- lint.linters_by_ft = lint.linters_by_ft or {}
