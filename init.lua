@@ -377,13 +377,23 @@ require('lazy').setup({
           ['ui-select'] = {
             require('telescope.themes').get_dropdown(),
           },
+          projects = {
+            prompt_prefix = '󱎸  ',
+            layout_strategy = 'horizontal',
+            layout_config = {
+              anchor = 'N',
+              height = 0.25,
+              width = 0.6,
+              prompt_position = 'bottom',
+            },
+          },
         },
       }
 
       -- Enable Telescope extensions if they are installed
       pcall(require('telescope').load_extension, 'fzf')
       pcall(require('telescope').load_extension, 'ui-select')
-      pcall(require('telescope').load_extension, 'projects')
+      -- pcall(require('telescope').load_extension, 'projects')
 
       -- See `:help telescope.builtin`
       local builtin = require 'telescope.builtin'
@@ -733,7 +743,7 @@ require('lazy').setup({
         lua = { 'stylua' },
         -- Conform can also run multiple formatters sequentially
         -- python = { "isort", "black" },
-        markdown = { 'markdownlint-cli2', stop_after_first = true },
+        markdown = { 'pretter', 'markdownlint-cli2', stop_after_first = true },
         --
         -- You can use 'stop_after_first' to run the first available formatter from the list
         -- javascript = { , "prettier", stop_after_first = true },
@@ -1281,6 +1291,11 @@ require('lazy').setup({
     ft = { 'markdown', 'quarto', 'codecompanion', 'Avante' },
     opts = {
       file_types = { 'markdown', 'quarto', 'codecompanion', 'Avante' },
+      latex = {
+        render_modes = false,
+        converter = 'utftex',
+        top_pad = 1,
+      },
     },
     dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' }, -- if you prefer nvim-web-devicons
   },
@@ -1298,10 +1313,17 @@ require('lazy').setup({
         -- or leave it empty to use the default settings
         -- refer to the configuration section below
         doc = {
-          inline = true,
+          inline = false,
           float = true,
-          max_width = 800,
-          max_height = 400,
+          max_width = 100,
+          max_height = 50,
+          conceal = function(lang, type)
+            -- only conceal math expressions
+            return type == 'math'
+          end,
+        },
+        math = {
+          enabled = false, -- disable math expression rendering, relying on render-markdown
         },
         resolve = function(path, src)
           if require('obsidian.api').path_is_note(path) then
@@ -1316,7 +1338,7 @@ require('lazy').setup({
   },
   {
     'obsidian-nvim/obsidian.nvim',
-    version = '*',
+    version = '3.13.*',
     lazy = true,
     ft = { 'markdown', 'qmd', 'quarto' },
     -- enabled = true,
@@ -1477,7 +1499,6 @@ require('lazy').setup({
   },
   {
     '3rd/image.nvim',
-    commit = '2e2d28b',
     event = 'VeryLazy',
     build = false,
     -- dependencies = {
@@ -1489,7 +1510,7 @@ require('lazy').setup({
       require('image').setup {
         backend = 'kitty',
         kitty_method = 'normal',
-        processor = 'magick_rock',
+        processor = 'magick_cli', -- or "magick_rock"
         -- processor = 'magick_rock', -- or "magick_cli"
         integrations = {
           markdown = {
@@ -1705,20 +1726,17 @@ require('lazy').setup({
   },
   --project
   {
-    'ahmedkhalf/project.nvim',
-    config = function()
-      require('project_nvim').setup {
-        -- your configuration comes here
-        -- or leave it empty to use the default settings
-        -- refer to the configuration section below
-        sync_root_with_cwd = true,
-        respect_buf_cwd = true,
-        update_focused_file = {
-          enable = true,
-          update_root = true,
-        },
-      }
-    end,
+    'DrKJeff16/project.nvim',
+    cmd = { -- Lazy-load by commands
+      'Project',
+      'ProjectAdd',
+      'ProjectConfig',
+      'ProjectDelete',
+      'ProjectHistory',
+      'ProjectRecents',
+      'ProjectRoot',
+      'ProjectSession',
+    },
   },
   -- Comment handling
   {
@@ -1729,6 +1747,39 @@ require('lazy').setup({
   },
   --AI
   -- { 'Joakker/lua-json5' },
+  -- Amazon Q to be update with resovle the login connetion issue.
+  -- {
+  --   name = 'amazonq',
+  --   url = 'https://github.com/awslabs/amazonq.nvim.git',
+  --   opts = {
+  --     ssoStartUrl = ' https://d-9367077c28.awsapps.com/start', -- Authenticate with Amazon Q Free Tier
+  --     filetypes = {
+  --       'amazonq',
+  --       'java',
+  --       'python',
+  --       'typescript',
+  --       'javascript',
+  --       'csharp',
+  --       'shell',
+  --       'sql',
+  --       'c',
+  --       'cpp',
+  --       'go',
+  --       'rust',
+  --       'lua',
+  --       'perl',
+  --       'matlab',
+  --     },
+  --     on_chat_open = function()
+  --       vim.cmd [[
+  --         vertical topleft split
+  --         vertical resize 80
+  --         " Window options:
+  --         set wrap breakindent nonumber norelativenumber nolist
+  --       ]]
+  --     end,
+  --   },
+  -- },
   {
     'olimorris/codecompanion.nvim',
     dependencies = {
@@ -1789,39 +1840,41 @@ require('lazy').setup({
               })
             end,
           },
-          llm = function()
-            --cclaude
-            -- return require('codecompanion.adapters').extend('openai_compatible', {
-            --   env = {
-            --     url = 'https://mj.chatgptten.com', -- optional: default value is ollama url http://127.0.0.1:11434
-            --     api_key = function()
-            --       return os.getenv 'CLAUDE_API_KEY'
-            --     end, -- optional: if your endpoint is authenticated
-            --     chat_url = '/v1/chat/completions', -- optional: default value, override if different
-            --   },
-            --   schema = {
-            --     model = {
-            --       default = 'claude-3-5-sonnet-20241022',
-            --     },
-            --   },
-            -- })
-            --ollama
-            return require('codecompanion.adapters').extend('ollama', {
-              schema = {
-                model = {
-                  -- default = 'deepseek-r1:8b',
-                  default = 'hf.co/unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF:UD-Q5_K_XL',
-                  -- default = 'llama3.2:3b',
+          http = {
+            llm = function()
+              --cclaude
+              -- return require('codecompanion.adapters').extend('openai_compatible', {
+              --   env = {
+              --     url = 'https://mj.chatgptten.com', -- optional: default value is ollama url http://127.0.0.1:11434
+              --     api_key = function()
+              --       return os.getenv 'CLAUDE_API_KEY'
+              --     end, -- optional: if your endpoint is authenticated
+              --     chat_url = '/v1/chat/completions', -- optional: default value, override if different
+              --   },
+              --   schema = {
+              --     model = {
+              --       default = 'claude-3-5-sonnet-20241022',
+              --     },
+              --   },
+              -- })
+              --ollama
+              return require('codecompanion.adapters').extend('ollama', {
+                schema = {
+                  model = {
+                    -- default = 'deepseek-r1:8b',
+                    default = 'hf.co/unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF:UD-Q5_K_XL',
+                    -- default = 'llama3.2:3b',
+                  },
+                  num_ctx = {
+                    default = 40960,
+                  },
+                  -- num_predict = {
+                  --   default = -1,
+                  -- },
                 },
-                num_ctx = {
-                  default = 40960,
-                },
-                -- num_predict = {
-                --   default = -1,
-                -- },
-              },
-            })
-          end,
+              })
+            end,
+          },
         },
       }
     end,
@@ -1836,92 +1889,92 @@ require('lazy').setup({
       require('mcphub').setup()
     end,
   },
-  {
-    'yetone/avante.nvim',
-    event = 'VeryLazy',
-    lazy = false,
-    version = false, -- set this if you want to always pull the latest change
-    opts = {
-      provider = 'gemini-cli',
-      acp_providers = {
-        ['gemini-cli'] = {
-          command = 'gemini',
-          args = { '--experimental-acp' },
-          env = {
-            NODE_NO_WARNINGS = '1',
-            GEMINI_API_KEY = 'cmd:pass show ai/gemini',
-          },
-          auth_method = 'gemini-api-key',
-        },
-      },
-      providers = {
-        -- dual_boost = {
-        --   enabled = true,
-        --   first_provider = 'ollama',
-        --   second_provider = 'ELI',
-        --   prompt = 'Based on the two reference outputs below, generate a response that incorporates elements from both but reflects your own judgment and unique perspective. Do not provide any explanation, just give the response directly. Reference Output 1: {{provider1_output}}, Reference Output 2: {{provider2_output}}',
-        --   timeout = 60000, -- Timeout in milliseconds
-        -- },
-        -- add any opts here
-        ollama = {
-          endpoint = '127.0.0.1:11434',
-          model = 'hf.co/unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF:UD-Q5_K_XL',
-          -- model = 'mistral',
-          -- model = 'opencoder',
-        },
-        -- @type AvanteProvider --/// ELI
-        -- ollama = {
-        --   endpoint = os.getenv 'ELI_API_URL',
-        --   api_key_name = 'ELI_API_KEY',
-        --   model = 'qwen2.5-7b',
-        --   -- model = 'mistral',
-        --   -- model = 'opencoder',
-        -- },
-
-        -- provider = 'cclaude', -- Recommend using Claude
-        -- auto_suggestions_provider = 'cclaude', -- Since auto-suggestions are a high-frequency operation and therefore expensive, it is recommended to specify an inexpensive provider or even a free provider: copilot
-        -- vendors = {
-        --   cclaude = {
-        --     __inherited_from = 'openai',
-        --     endpoint = 'mj.chatgptten.com/v1',
-        --     api_key_name = 'CLAUDE_API_KEY',
-        --     model = 'claude-3-5-sonnet-20241022',
-        --     temperature = 0,
-        --     max_tokens = 4096,
-        --   },
-        -- },
-      },
-    },
-    -- if you want to build from source then do `make BUILD_FROM_SOURCE=true`
-    build = 'make',
-    -- build = "powershell -ExecutionPolicy Bypass -File Build.ps1 -BuildFromSource false" -- for windows
-    dependencies = {
-      'stevearc/dressing.nvim',
-      'nvim-lua/plenary.nvim',
-      'MunifTanjim/nui.nvim',
-      --- The below dependencies are optional,
-      'hrsh7th/nvim-cmp', -- autocompletion for avante commands and mentions
-      'nvim-tree/nvim-web-devicons', -- or echasnovski/mini.icons
-      -- 'zbirenbaum/copilot.lua', -- for providers='copilot'
-      {
-        -- support for image pasting
-        'HakonHarnes/img-clip.nvim',
-        event = 'VeryLazy',
-        opts = {
-          -- recommended settings
-          default = {
-            embed_image_as_base64 = false,
-            prompt_for_file_name = false,
-            drag_and_drop = {
-              insert_mode = true,
-            },
-            -- required for Windows users
-            -- use_absolute_path = true,
-          },
-        },
-      },
-    },
-  },
+  -- {
+  --   'yetone/avante.nvim',
+  --   event = 'VeryLazy',
+  --   lazy = false,
+  --   version = false, -- set this if you want to always pull the latest change
+  --   opts = {
+  --     provider = 'gemini-cli',
+  --     acp_providers = {
+  --       ['gemini-cli'] = {
+  --         command = 'gemini',
+  --         args = { '--experimental-acp' },
+  --         env = {
+  --           NODE_NO_WARNINGS = '1',
+  --           GEMINI_API_KEY = 'cmd:pass show ai/gemini',
+  --         },
+  --         auth_method = 'gemini-api-key',
+  --       },
+  --     },
+  --     providers = {
+  --       -- dual_boost = {
+  --       --   enabled = true,
+  --       --   first_provider = 'ollama',
+  --       --   second_provider = 'ELI',
+  --       --   prompt = 'Based on the two reference outputs below, generate a response that incorporates elements from both but reflects your own judgment and unique perspective. Do not provide any explanation, just give the response directly. Reference Output 1: {{provider1_output}}, Reference Output 2: {{provider2_output}}',
+  --       --   timeout = 60000, -- Timeout in milliseconds
+  --       -- },
+  --       -- add any opts here
+  --       ollama = {
+  --         endpoint = '127.0.0.1:11434',
+  --         model = 'hf.co/unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF:UD-Q5_K_XL',
+  --         -- model = 'mistral',
+  --         -- model = 'opencoder',
+  --       },
+  --       -- @type AvanteProvider --/// ELI
+  --       -- ollama = {
+  --       --   endpoint = os.getenv 'ELI_API_URL',
+  --       --   api_key_name = 'ELI_API_KEY',
+  --       --   model = 'qwen2.5-7b',
+  --       --   -- model = 'mistral',
+  --       --   -- model = 'opencoder',
+  --       -- },
+  --
+  --       -- provider = 'cclaude', -- Recommend using Claude
+  --       -- auto_suggestions_provider = 'cclaude', -- Since auto-suggestions are a high-frequency operation and therefore expensive, it is recommended to specify an inexpensive provider or even a free provider: copilot
+  --       -- vendors = {
+  --       --   cclaude = {
+  --       --     __inherited_from = 'openai',
+  --       --     endpoint = 'mj.chatgptten.com/v1',
+  --       --     api_key_name = 'CLAUDE_API_KEY',
+  --       --     model = 'claude-3-5-sonnet-20241022',
+  --       --     temperature = 0,
+  --       --     max_tokens = 4096,
+  --       --   },
+  --       -- },
+  --     },
+  --   },
+  --   -- if you want to build from source then do `make BUILD_FROM_SOURCE=true`
+  --   build = 'make',
+  --   -- build = "powershell -ExecutionPolicy Bypass -File Build.ps1 -BuildFromSource false" -- for windows
+  --   dependencies = {
+  --     'stevearc/dressing.nvim',
+  --     'nvim-lua/plenary.nvim',
+  --     'MunifTanjim/nui.nvim',
+  --     --- The below dependencies are optional,
+  --     'hrsh7th/nvim-cmp', -- autocompletion for avante commands and mentions
+  --     'nvim-tree/nvim-web-devicons', -- or echasnovski/mini.icons
+  --     -- 'zbirenbaum/copilot.lua', -- for providers='copilot'
+  --     {
+  --       -- support for image pasting
+  --       'HakonHarnes/img-clip.nvim',
+  --       event = 'VeryLazy',
+  --       opts = {
+  --         -- recommended settings
+  --         default = {
+  --           embed_image_as_base64 = false,
+  --           prompt_for_file_name = false,
+  --           drag_and_drop = {
+  --             insert_mode = true,
+  --           },
+  --           -- required for Windows users
+  --           -- use_absolute_path = true,
+  --         },
+  --       },
+  --     },
+  --   },
+  -- },
   -- using lazy.nvim
   {
     'akinsho/bufferline.nvim',
@@ -1986,5 +2039,23 @@ local neogit = require 'neogit'
 neogit.setup {}
 vim.keymap.set('n', '<leader>gg', ':Neogit<CR>', { desc = 'Neo[g]it' })
 
+-- AmazonQ quick term
+local Terminal = require('toggleterm.terminal').Terminal
+local aq = Terminal:new {
+  cmd = 'q',
+  name = 'AmazonQ',
+  count = 5,
+  direction = 'float',
+  float_opts = {
+    border = 'double',
+  },
+}
+
+function _aq_toggle()
+  aq:toggle()
+end
+
+-- vim.api.nvim_set_keymap("n", "<leader>cq", "<cmd>lua _aq_toggle()<CR>", {noremap = true, silent = true})
+vim.keymap.set('n', '<leader>cq', ':lua _aq_toggle()<CR>', { desc = '[c]ode Amazon[q]' })
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
