@@ -19,7 +19,7 @@
                 "path": "./snippets/quarto.json"
             },
             {
-                "language": "markdown",
+                "language": ["markdown", "quarto"],
                 "path": "./snippets/markdown.json"
             },
             {
@@ -36,6 +36,6 @@
                 "language": "tex",
                 "path": "./snippets/tex.json"
             }
-    ]
+        ]
     }
 }
