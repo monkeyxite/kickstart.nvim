@@ -100,7 +100,7 @@ vim.g.loaded_netrwPlugin = 1
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
 -- Diagnostic keymaps
-vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
+vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = '[Q]uickfix diagnostics' })
 
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
 -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
@@ -126,32 +126,35 @@ vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower win
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
 --bufferline
-vim.keymap.set('n', '<leader>bp', ':BufferLinePick<CR>', { noremap = true, desc = '[B]uffer[P]ick' })
-vim.keymap.set('n', '<leader>bj', ':BufferLineCycleNext<CR>', { noremap = true, desc = '[B]uffer[J]next' })
-vim.keymap.set('n', '<leader>bk', ':BufferLineCyclePrev<CR>', { noremap = true, desc = '[B]uffer[K]Previous' })
-vim.keymap.set('n', '<leader>bd', ':bd<CR>', { noremap = true, desc = '[B]uffer[D]elete' })
-vim.keymap.set('n', '<leader>bcp', ':BufferLinePickClose<CR>', { noremap = true, desc = '[B]uffer[C]lose[P]ick' })
-vim.keymap.set('n', '<leader>bco', ':BufferLineCloseOthers<CR>', { noremap = true, desc = '[B]uffer[C]lose[O]thers' })
+vim.keymap.set('n', '<leader>bp', ':BufferLinePick<CR>', { noremap = true, desc = '[P]ick' })
+vim.keymap.set('n', '<leader>bj', ':BufferLineCycleNext<CR>', { noremap = true, desc = '[J] Next' })
+vim.keymap.set('n', '<leader>bk', ':BufferLineCyclePrev<CR>', { noremap = true, desc = '[K] Previous' })
+vim.keymap.set('n', '<leader>bd', ':bd<CR>', { noremap = true, desc = '[D]elete' })
+vim.keymap.set('n', '<leader>bcp', ':BufferLinePickClose<CR>', { noremap = true, desc = '[C]lose [P]ick' })
+vim.keymap.set('n', '<leader>bco', ':BufferLineCloseOthers<CR>', { noremap = true, desc = '[C]lose [O]thers' })
 
 --dashboard
-vim.keymap.set('n', '<leader>;', ':lua MiniStarter.open()<CR>', { noremap = true, desc = 'Dashboard[;]' })
+vim.keymap.set('n', '<leader>;', ':lua MiniStarter.open()<CR>', { noremap = true, desc = '[;] Dashboard' })
 
 --code
-vim.keymap.set('n', '<leader>cz', ':lua Snacks.zen()<CR>', { noremap = true, desc = 'Toggle [Z]en mode' })
+vim.keymap.set('n', '<leader>cz', ':lua Snacks.zen()<CR>', { noremap = true, desc = '[Z]en mode' })
 
 --file tree toggle
-vim.keymap.set('n', '<leader>e', ':lua MiniFiles.open()<CR>', { noremap = true, desc = '[e]xplorer files' })
-vim.keymap.set('n', '<leader>te', ':NvimTreeToggle<CR>', { noremap = true, desc = '[T]oggle[e]xplorer' })
+vim.keymap.set('n', '<leader>e', ':lua MiniFiles.open()<CR>', { noremap = true, desc = '[E]xplorer' })
 
 -- quarto quick add
 vim.keymap.set({ 'n', 'i' }, '<M-i>', '<esc>o```{python}<cr>```<esc>O', { desc = '[i]nsert python code chunk' })
 -- IPython Term
-vim.keymap.set({ 'n' }, '<leader>ci', ':split term://ipython<cr>', { desc = '[c]ode [i]python' })
+vim.keymap.set({ 'n' }, '<leader>ci', ':split term://ipython<cr>', { desc = '[i]Python terminal' })
+-- Quarto/Markdown preview
+vim.keymap.set('n', '<leader>cp', ':QuartoPreview<CR>', { desc = '[P]review Quarto' })
+vim.keymap.set('n', '<leader>cr', ':QuartoRender<CR>', { desc = '[R]ender Quarto' })
+vim.keymap.set('n', '<leader>cm', ':MarkdownPreview<CR>', { desc = '[M]arkdown preview' })
 
 -- AI
-vim.keymap.set({ 'n', 'v' }, '<leader>ccc', ':CodeCompanionChat Toggle<cr>', { desc = '[A]I[C]ompanion[C]hat toggle' })
-vim.keymap.set({ 'n', 'v' }, '<leader>cca', ':CodeCompanionActions<cr>', { desc = '[A]I[C]ompanion[A]ction' })
-vim.keymap.set({ 'v' }, '<leader>ccv', ':CodeCompanionChat Add<cr>', { desc = '[A]I[C]ompanion add [V]isual' })
+vim.keymap.set({ 'n', 'v' }, '<leader>ac', ':CodeCompanionChat Toggle<cr>', { desc = '[C]hat toggle' })
+vim.keymap.set({ 'n', 'v' }, '<leader>aa', ':CodeCompanionActions<cr>', { desc = '[A]ctions' })
+vim.keymap.set({ 'v' }, '<leader>av', ':CodeCompanionChat Add<cr>', { desc = 'Add [V]isual' })
 
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
@@ -203,7 +206,13 @@ rtp:prepend(lazypath)
 -- NOTE: Here is where you install your plugins.
 require('lazy').setup({
   -- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
-  'NMAC427/guess-indent.nvim', -- Detect tabstop and shiftwidth automatically
+  {
+    'NMAC427/guess-indent.nvim',
+    opts = {
+      -- markdown/quarto rely on ftplugin definitions
+      filetype_exclude = { 'markdown', 'quarto' },
+    },
+  },
 
   -- NOTE: Plugins can also be added by using a table,
   -- with the first argument being the link and the following
@@ -300,15 +309,26 @@ require('lazy').setup({
 
       -- Document existing key chains
       spec = {
-        { '<leader>a', group = '[A]I' },
-        { '<leader>b', group = '[B]uffer', mode = { 'n', 'x' } },
-        { '<leader>c', group = '[C]ode', mode = { 'n', 'x' } },
-        { '<leader>d', group = '[D]ocument' },
-        { '<leader>r', group = '[R]ename' },
-        { '<leader>s', group = '[S]earch' },
-        { '<leader>t', group = '[T]oggle' },
-        { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } },
-        { '<localleader>m', group = ' Mail' },
+        { '<leader>a', group = 'AI', icon = { icon = '󰧑', color = 'cyan' } },
+        { '<leader>b', group = 'Buffer', icon = { icon = '󰓩', color = 'blue' }, mode = { 'n', 'x' } },
+        { '<leader>c', group = 'Code', icon = { icon = '󰅪', color = 'orange' }, mode = { 'n', 'x' } },
+        { '<leader>d', group = 'Document', icon = { icon = '󰈬', color = 'yellow' } },
+        { '<leader>e', icon = { icon = '󰙅', color = 'green' } },
+        { '<leader>f', icon = { icon = '󰉼', color = 'blue' } },
+        { '<leader>g', group = 'Git', icon = { icon = '󰊢', color = 'red' } },
+        { '<leader>h', group = 'Hunk', icon = { icon = '󰊢', color = 'red' }, mode = { 'n', 'v' } },
+        { '<leader>q', icon = { icon = '󰒡', color = 'yellow' } },
+        { '<leader>r', group = 'Rename', icon = { icon = '󰏪', color = 'purple' } },
+        { '<leader>s', group = 'Search', icon = { icon = '󰍉', color = 'green' } },
+        { '<leader>;', icon = { icon = '󰍜', color = 'purple' } },
+        { '<leader>/', icon = { icon = '󰈞', color = 'blue' } },
+        { '<leader><leader>', icon = { icon = '󱦞', color = 'azure' } },
+        { '<leader>o', group = 'Mini Sessi[o]n', icon = { icon = '󰆔', color = 'green' } },
+        { '<leader>y', group = '[Y]ank Path', icon = { icon = '󰆏', color = 'orange' } },
+        { '<localleader>h', group = 'MD [H]eader', icon = { icon = '󰉫', color = 'blue' } },
+        { '<localleader>i', group = 'Py [i]Python', icon = { icon = '󰌠', color = 'yellow' } },
+        { '<localleader>t', group = 'MD [T]able', icon = { icon = '󰓫', color = 'orange' } },
+        { '<localleader>m', group = 'Neo[M]utt', icon = { icon = '󰇮', color = 'cyan' } },
       },
     },
   },
@@ -399,18 +419,18 @@ require('lazy').setup({
 
       -- See `:help telescope.builtin`
       local builtin = require 'telescope.builtin'
-      vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
-      vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
-      vim.keymap.set('n', '<leader>sf', builtin.find_files, { desc = '[S]earch [F]iles' })
-      vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
-      vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
-      vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
-      vim.keymap.set('n', '<leader>sb', builtin.buffers, { desc = '[S]earch [B]uffers' })
-      vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
-      vim.keymap.set('n', '<leader>sp', builtin.resume, { desc = '[S]earch [P]rojects' })
-      vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
-      vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
-      vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
+      vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[H]elp' })
+      vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[K]eymaps' })
+      vim.keymap.set('n', '<leader>sf', builtin.find_files, { desc = '[F]iles' })
+      vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]elect Telescope' })
+      vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = 'Current [W]ord' })
+      vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[G]rep' })
+      vim.keymap.set('n', '<leader>sb', builtin.buffers, { desc = '[B]uffers' })
+      vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[D]iagnostics' })
+      vim.keymap.set('n', '<leader>sp', builtin.resume, { desc = '[P]revious (resume)' })
+      vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[R]esume' })
+      vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = 'Recent [.]' })
+      vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = 'Find buffers' })
 
       -- Slightly advanced example of overriding default behavior and theme
       vim.keymap.set('n', '<leader>/', function()
@@ -594,9 +614,9 @@ require('lazy').setup({
           --
           -- This may be unwanted, since they displace some of your code
           if client and client_supports_method(client, vim.lsp.protocol.Methods.textDocument_inlayHint, event.buf) then
-            map('<leader>th', function()
+            map('<leader>ch', function()
               vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf })
-            end, '[T]oggle Inlay [H]ints')
+            end, 'Inlay [H]ints toggle')
           end
         end,
       })
@@ -777,7 +797,8 @@ require('lazy').setup({
     build = 'cargo build --release',
     lazy = false,
     dependencies = {
-      { 'rafamadriz/friendly-snippets',
+      {
+        'rafamadriz/friendly-snippets',
         config = function()
           require('luasnip.loaders.from_vscode').lazy_load()
           require('luasnip.loaders.from_vscode').lazy_load { paths = { vim.fn.stdpath 'config' .. '/snips' } }
@@ -804,7 +825,9 @@ require('lazy').setup({
         'L3MON4D3/LuaSnip',
         version = '2.*',
         build = (function()
-          if vim.fn.has 'win32' == 1 or vim.fn.executable 'make' == 0 then return end
+          if vim.fn.has 'win32' == 1 or vim.fn.executable 'make' == 0 then
+            return
+          end
           return 'make install_jsregexp'
         end)(),
         opts = {},
@@ -1036,14 +1059,18 @@ require('lazy').setup({
           starter.sections.sessions(10, true),
           starter.sections.recent_files(10, false, true),
           {
-            { name = 'Lazy', action = 'Lazy', section = 'Updaters' },
-            { name = 'Mason', action = 'Mason', section = 'Updaters' },
+            { name = 'Lazy', action = 'Lazy', section = '󰏗 Updaters' },
+            { name = 'Mason', action = 'Mason', section = '󰏗 Updaters' },
           },
-          starter.sections.builtin_actions(),
+          {
+            { name = 'Edit new', action = 'enew', section = '󰌧 Actions' },
+            { name = 'Find file', action = 'Telescope find_files', section = '󰌧 Actions' },
+            { name = 'Quit', action = 'qall', section = '󰌧 Actions' },
+          },
         },
         content_hooks = {
-          starter.gen_hook.aligning('center', 'center'),
           starter.gen_hook.adding_bullet '  ',
+          starter.gen_hook.aligning('center', 'center'),
         },
         header = function()
           local banner = [[
@@ -1101,9 +1128,9 @@ require('lazy').setup({
       -- TODO fix keymapping
       ---------------------------------------------------------------------
       require('mini.sessions').setup()
-      vim.keymap.set('n', ',oo', "<cmd>lua MiniSessions.select('read')<CR>", { desc = 'Open Session' })
-      vim.keymap.set('n', ',od', "<cmd>lua MiniSessions.select('delete')<CR>", { desc = 'Delete Session' })
-      vim.keymap.set('n', ',os', function()
+      vim.keymap.set('n', '<leader>oo', "<cmd>lua MiniSessions.select('read')<CR>", { desc = '[O]pen' })
+      vim.keymap.set('n', '<leader>od', "<cmd>lua MiniSessions.select('delete')<CR>", { desc = '[D]elete' })
+      vim.keymap.set('n', '<leader>os', function()
         local ok, res = pcall(vim.fn.input, {
           prompt = 'Save session as: ',
           cancelreturn = false,
@@ -1244,8 +1271,8 @@ require('lazy').setup({
       local function set_terminal()
         vim.fn.call('slime#config', {})
       end
-      vim.keymap.set('n', '<leader>cm', mark_terminal, { desc = '[m]ark terminal' })
-      vim.keymap.set('n', '<leader>cs', set_terminal, { desc = '[s]et terminal' })
+      vim.keymap.set('n', '<leader>ct', mark_terminal, { desc = 'Mark [T]erminal' })
+      vim.keymap.set('n', '<leader>cs', set_terminal, { desc = '[S]et terminal' })
       vim.keymap.set({ 'n', 'i' }, '<M-cr>', function()
         vim.cmd [[call slime#send_cell()]]
       end, { desc = 'send code cell to term' })
@@ -1257,13 +1284,13 @@ require('lazy').setup({
     'dbeniamine/vim-mail',
     ft = 'mail',
     init = function()
-      vim.cmd "let g:VimMailDoNotMap=1"
+      vim.cmd 'let g:VimMailDoNotMap=1'
       vim.cmd "let g:VimMailContactsProvider=['khard']"
       vim.cmd "let g:VimMailClient='neomutt'"
       vim.cmd "let g:VimMailSpellLangs=['en', 'se']"
       vim.cmd "let g:VimMailFromList = [ 'Jonny Hou <jonny.hou@ericsson.com>', 'Jonny Hou <jonny.hou@gmail.com>', 'Jonny Hou <monkeyxite@gmail.com>' ]"
-      vim.cmd "let g:VimMailDoNotMap_m = 1"
-      vim.cmd "let g:VimMailDoNotMap_m = 1"
+      vim.cmd 'let g:VimMailDoNotMap_m = 1'
+      vim.cmd 'let g:VimMailDoNotMap_m = 1'
       vim.filetype.add {
         extension = { eml = 'mail' },
         pattern = {
@@ -1278,7 +1305,9 @@ require('lazy').setup({
 
       -- Markdown snippets in mail
       local ok_ls, ls = pcall(require, 'luasnip')
-      if ok_ls then ls.filetype_extend('mail', { 'markdown' }) end
+      if ok_ls then
+        ls.filetype_extend('mail', { 'markdown' })
+      end
 
       vim.api.nvim_create_autocmd('FileType', {
         pattern = 'mail',
@@ -1292,30 +1321,34 @@ require('lazy').setup({
             local acct = ''
             local has_markdown = false
             for _, line in ipairs(lines) do
-              if line:match('^From:.*ericsson') then
+              if line:match '^From:.*ericsson' then
                 acct = '-e "source ~/.config/mutt/accounts/2-work.muttrc"'
-              elseif line:match('^From:.*monkeyxite') or line:match('^From:.*gmail') then
+              elseif line:match '^From:.*monkeyxite' or line:match '^From:.*gmail' then
                 acct = '-e "source ~/.config/mutt/accounts/1-monkeyxite@gmail.com.muttrc"'
               end
-              if line:match('^#') then has_markdown = true end
+              if line:match '^#' then
+                has_markdown = true
+              end
             end
-            vim.cmd('write')
+            vim.cmd 'write'
             if has_markdown then
-              vim.cmd('write')
-              vim.fn.system('cat ' .. vim.fn.expand('%') .. ' | muttlook --action draft')
-              vim.cmd('terminal neomutt ' .. acct .. ' -H ' .. vim.fn.expand('%'))
+              vim.cmd 'write'
+              vim.fn.system('cat ' .. vim.fn.expand '%' .. ' | muttlook --action draft')
+              vim.cmd('terminal neomutt ' .. acct .. ' -H ' .. vim.fn.expand '%')
             else
-              vim.cmd('terminal neomutt ' .. acct .. ' -H ' .. vim.fn.expand('%'))
+              vim.cmd('terminal neomutt ' .. acct .. ' -H ' .. vim.fn.expand '%')
             end
           end, { buffer = true, desc = ' Send mail' })
 
           -- Highlight mail headers
-          local ns = vim.api.nvim_create_namespace('mail_headers')
+          local ns = vim.api.nvim_create_namespace 'mail_headers'
           local function highlight_headers()
             vim.api.nvim_buf_clear_namespace(0, ns, 0, -1)
             for i, line in ipairs(vim.api.nvim_buf_get_lines(0, 0, -1, false)) do
-              if line == '' then break end
-              local colon = line:find(':')
+              if line == '' then
+                break
+              end
+              local colon = line:find ':'
               if colon then
                 vim.api.nvim_buf_add_highlight(0, ns, '@keyword', i - 1, 0, colon)
                 vim.api.nvim_buf_add_highlight(0, ns, '@string', i - 1, colon, -1)
@@ -1333,7 +1366,7 @@ require('lazy').setup({
           -- Unmap vim-mail's ,m (replaced by ,S)
           vim.defer_fn(function()
             -- Clean any stray root-level mail mappings
-            for _, k in ipairs({',q',',m'}) do
+            for _, k in ipairs { ',q', ',m' } do
               pcall(vim.keymap.del, 'n', k, { buffer = 0 })
               pcall(vim.keymap.del, 'v', k, { buffer = 0 })
               pcall(vim.keymap.del, '', k, { buffer = 0 })
@@ -1341,7 +1374,7 @@ require('lazy').setup({
             -- All vim-mail keys under ,m prefix with mail icon
             local mail_keys = {
               { ',mq', '<Plug>MailQuote', ' Quote' },
-              { ',mm', 'send', ' Send mail' },  -- placeholder, actual func is above
+              { ',mm', 'send', ' Send mail' }, -- placeholder, actual func is above
               { ',mt', ':call VimMailGoto("/^To","A") <CR>', ' To:' },
               { ',mc', ':call VimMailGoto("/^Cc","A") <CR>', ' Cc:' },
               { ',mb', ':call VimMailGoto("/^Bcc","A") <CR>', ' Bcc:' },
@@ -1359,7 +1392,7 @@ require('lazy').setup({
               { ',mk', ':call VimMailKillQuotedSig() <CR>', ' Kill quoted sig' },
             }
             for _, k in ipairs(mail_keys) do
-              if k[1] ~= ',mm' then  -- skip send placeholder
+              if k[1] ~= ',mm' then -- skip send placeholder
                 pcall(vim.keymap.set, 'n', k[1], k[2], { buffer = true, desc = k[3] })
               end
             end
@@ -1536,13 +1569,13 @@ require('lazy').setup({
       },
       picker = { name = 'telescope.nvim' },
       legacy_commands = false,
-      disable_frontmatter = true,
+      frontmatter = { enabled = false },
       statusline = { enabled = false }, -- Disable statusline to prevent it hammering ripgrep every second
       footer = {
         enabled = false, -- Disabling this fixed the lag and error
       },
       ui = {
-        enable = false, -- set to false to disable all additional syntax featuresA
+        enable = false, -- set to false to disable all additional syntax features
       },
       -- Specify how to handle attachments.
       attachments = {
@@ -1550,7 +1583,7 @@ require('lazy').setup({
         -- If this is a relative path it will be interpreted as relative to the vault root.
         -- You can always override this per image by passing a full path to the command instead of just a filename.
         -- not need with snacks.image
-        img_folder = '3_Resource/assets', -- This is the default
+        folder = '3_Resource/assets', -- This is the default
         -- Optional, customize the default name or prefix when pasting images via `:ObsidianPasteImg`.
         ---@return string
         img_name_func = function()
@@ -1766,24 +1799,23 @@ require('lazy').setup({
       -- add a few new things
 
       -- don't change the mappings (unless it's related to your bug)
-      vim.keymap.set('n', '<localleader>ii', ':MoltenInit<CR>', { desc = '[i]Python[i]nit' })
+      vim.keymap.set('n', '<localleader>ii', ':MoltenInit<CR>', { desc = '[I]nit' })
       vim.keymap.set('n', '<localleader>ip', function()
         local venv = os.getenv 'VIRTUAL_ENV'
         if venv ~= nil then
-          -- in the form of /home/benlubas/.virtualenvs/VENV_NAME
           venv = string.match(venv, '/.+/(.+)')
           vim.cmd(('MoltenInit %s'):format(venv))
         else
           vim.cmd 'MoltenInit python3'
         end
-      end, { desc = 'Initialize Molten for python3', silent = true })
+      end, { desc = 'Init [P]ython3', silent = true })
 
-      vim.keymap.set('n', '<localleader>e', ':MoltenEvaluateOperator<CR>', { desc = 'iPy[e]valuateOperator' })
-      vim.keymap.set('n', '<localleader>r', ':MoltenReevaluateCell<CR>', { desc = 'iPy[r]eevaluatate' })
-      vim.keymap.set('v', '<localleader>r', ':<C-u>MoltenEvaluateVisual<CR>gv', { desc = 'iPy[r]un' })
-      vim.keymap.set('n', '<localleader>io', ':noautocmd MoltenEnterOutput<CR>', { desc = '[i]Py[o]utEnter' })
-      vim.keymap.set('n', '<localleader>iho', ':MoltenHideOutput<CR>', { desc = '[i]Py[h]ide[o]ut' })
-      vim.keymap.set('n', '<localleader>id', ':MoltenDelete<CR>', { desc = '[i]Py[d]elte' })
+      vim.keymap.set('n', '<localleader>ie', ':MoltenEvaluateOperator<CR>', { desc = '[E]valuate operator' })
+      vim.keymap.set('n', '<localleader>ir', ':MoltenReevaluateCell<CR>', { desc = '[R]eevaluate cell' })
+      vim.keymap.set('v', '<localleader>ir', ':<C-u>MoltenEvaluateVisual<CR>gv', { desc = '[R]un visual' })
+      vim.keymap.set('n', '<localleader>io', ':noautocmd MoltenEnterOutput<CR>', { desc = '[O]utput enter' })
+      vim.keymap.set('n', '<localleader>ih', ':MoltenHideOutput<CR>', { desc = '[H]ide output' })
+      vim.keymap.set('n', '<localleader>id', ':MoltenDelete<CR>', { desc = '[D]elete' })
     end,
   },
   -- SymbolOutline
@@ -1792,7 +1824,7 @@ require('lazy').setup({
     lazy = true,
     cmd = { 'Outline', 'OutlineOpen' },
     keys = { -- Example mapping to toggle outline
-      { '<leader>co', '<cmd>Outline<CR>', desc = 'Toggle outline' },
+      { '<leader>co', '<cmd>Outline<CR>', desc = '[O]utline toggle' },
     },
     opts = {
       -- You providers
@@ -1807,17 +1839,6 @@ require('lazy').setup({
   -- git conflict
   { 'akinsho/git-conflict.nvim', version = '*', event = 'BufReadPost', config = true },
   --tree
-  {
-    'nvim-tree/nvim-tree.lua',
-    version = '*',
-    cmd = { 'NvimTreeToggle', 'NvimTreeOpen', 'NvimTreeFocus' },
-    dependencies = {
-      'nvim-tree/nvim-web-devicons',
-    },
-    config = function()
-      require('nvim-tree').setup {}
-    end,
-  },
   --indent line
   {
     'lukas-reineke/indent-blankline.nvim',
@@ -1929,15 +1950,15 @@ require('lazy').setup({
           --   },
           -- },
         },
-        strategies = {
+        interactions = {
           agent = {
-            adapter = 'llm',
+            adapter = 'kiro',
           },
           chat = {
-            adapter = 'gemini_cli', -- copilot defaults to claude-sonent now! 🎉
+            adapter = 'kiro',
           },
           inline = {
-            adapter = 'llm',
+            adapter = 'kiro',
           },
         },
         display = {
@@ -1950,6 +1971,21 @@ require('lazy').setup({
         },
         adapters = {
           acp = {
+            kiro = function()
+              -- Walk up from cwd to find .kiro/agents/*.json
+              local dir = vim.fn.getcwd()
+              while dir ~= '/' do
+                local agent_files = vim.fn.glob(dir .. '/.kiro/agents/*.json', false, true)
+                if #agent_files > 0 then
+                  local name = vim.fn.fnamemodify(agent_files[1], ':t:r')
+                  return require('codecompanion.adapters').extend('kiro', {
+                    commands = { default = { 'bash', '-c', 'cd ' .. vim.fn.shellescape(dir) .. ' && exec kiro-cli acp --agent ' .. name } },
+                  })
+                end
+                dir = vim.fn.fnamemodify(dir, ':h')
+              end
+              return require('codecompanion.adapters').extend('kiro', {})
+            end,
             gemini_cli = function()
               return require('codecompanion.adapters').extend('gemini_cli', {
                 defaults = {
@@ -2162,7 +2198,7 @@ require('lazy').setup({
 -- For more, see: https://github.com/NeogitOrg/neogit
 local neogit = require 'neogit'
 neogit.setup {}
-vim.keymap.set('n', '<leader>gg', ':Neogit<CR>', { desc = 'Neo[g]it' })
+vim.keymap.set('n', '<leader>gg', ':Neogit<CR>', { desc = 'Neo[G]it' })
 
 -- AmazonQ quick term
 local Terminal = require('toggleterm.terminal').Terminal
@@ -2181,18 +2217,17 @@ function _aq_toggle()
 end
 
 -- vim.api.nvim_set_keymap("n", "<leader>cq", "<cmd>lua _aq_toggle()<CR>", {noremap = true, silent = true})
-vim.keymap.set('n', '<leader>cq', ':lua _aq_toggle()<CR>', { desc = '[c]ode Amazon[q]' })
+vim.keymap.set('n', '<leader>cq', ':lua _aq_toggle()<CR>', { desc = 'Amazon [Q]' })
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
 --
---  Localleader , with Copying
-vim.keymap.set('n', '<localleader>y', '<Nop>', { desc = '󰆏 [Y]ank...' })
-vim.keymap.set('n', '<localleader>yp', function()
+--  Yank paths
+vim.keymap.set('n', '<leader>yp', function()
   vim.fn.setreg('+', vim.fn.expand '%:p:.')
-end, { desc = '[Y]ank file path' })
-vim.keymap.set('n', '<localleader>yd', function()
+end, { desc = 'File [P]ath' })
+vim.keymap.set('n', '<leader>yd', function()
   vim.fn.setreg('+', vim.fn.expand '%:h')
-end, { desc = 'Copy directory path' })
-vim.keymap.set('n', '<localleader>yf', function()
+end, { desc = '[D]irectory' })
+vim.keymap.set('n', '<leader>yf', function()
   vim.fn.setreg('+', vim.fn.expand '%:t:r')
-end, { desc = 'Copy file name' })
+end, { desc = '[F]ile name' })
