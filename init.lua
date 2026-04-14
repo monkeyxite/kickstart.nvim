@@ -38,6 +38,7 @@ vim.o.breakindent = true
 
 -- Save undo history
 vim.o.undofile = true
+vim.o.swapfile = false
 
 -- Case-insensitive searching UNLESS \C or one or more capital letters in the search term
 vim.o.ignorecase = true
@@ -100,7 +101,7 @@ vim.g.loaded_netrwPlugin = 1
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
 -- Diagnostic keymaps
-vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = '[Q]uickfix diagnostics' })
+vim.keymap.set('n', '<leader>q', '<cmd>Trouble diagnostics toggle<CR>', { desc = '[Q]uickfix diagnostics' })
 
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
 -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
@@ -138,6 +139,16 @@ vim.keymap.set('n', '<leader>;', ':lua MiniStarter.open()<CR>', { noremap = true
 
 --code
 vim.keymap.set('n', '<leader>cz', ':lua Snacks.zen()<CR>', { noremap = true, desc = '[Z]en mode' })
+vim.keymap.set('n', '<leader>cv', function()
+  local cfg = vim.diagnostic.config()
+  if cfg.virtual_text then
+    vim.diagnostic.config { virtual_text = false }
+    vim.notify 'Virtual text OFF'
+  else
+    vim.diagnostic.config { virtual_text = { source = true, spacing = 2 } }
+    vim.notify 'Virtual text ON'
+  end
+end, { desc = '[V]irtual text toggle' })
 
 --file tree toggle
 vim.keymap.set('n', '<leader>e', ':lua MiniFiles.open()<CR>', { noremap = true, desc = '[E]xplorer' })
@@ -147,14 +158,31 @@ vim.keymap.set({ 'n', 'i' }, '<M-i>', '<esc>o```{python}<cr>```<esc>O', { desc =
 -- IPython Term
 vim.keymap.set({ 'n' }, '<leader>ci', ':split term://ipython<cr>', { desc = '[i]Python terminal' })
 -- Quarto/Markdown preview
-vim.keymap.set('n', '<leader>cp', ':QuartoPreview<CR>', { desc = '[P]review Quarto' })
-vim.keymap.set('n', '<leader>cr', ':QuartoRender<CR>', { desc = '[R]ender Quarto' })
-vim.keymap.set('n', '<leader>cm', ':MarkdownPreview<CR>', { desc = '[M]arkdown preview' })
+vim.keymap.set('n', '<leader>np', ':QuartoPreview<CR>', { desc = '[P]review Quarto' })
+vim.keymap.set('n', '<leader>nr', ':QuartoRender<CR>', { desc = '[R]ender Quarto' })
+vim.keymap.set('n', '<leader>nm', ':MarkdownPreview<CR>', { desc = '[M]arkdown preview' })
+-- Obsidian
+vim.keymap.set('n', '<leader>nb', ':Obsidian backlinks<CR>', { desc = '[B]acklinks' })
+vim.keymap.set('n', '<leader>nl', ':Obsidian link<CR>', { desc = '[L]ink selection' })
+vim.keymap.set('n', '<leader>nL', ':Obsidian links<CR>', { desc = '[L]inks (current note)' })
+vim.keymap.set('n', '<leader>nf', ':Obsidian follow_link<CR>', { desc = '[F]ollow link' })
+vim.keymap.set('n', '<leader>nn', ':Obsidian new<CR>', { desc = '[N]ew note' })
+vim.keymap.set('n', '<leader>ns', ':Obsidian search<CR>', { desc = '[S]earch vault' })
+vim.keymap.set('n', '<leader>no', ':Obsidian quick_switch<CR>', { desc = '[O]pen quickswitch' })
+vim.keymap.set('n', '<leader>ni', ':Obsidian paste_img<CR>', { desc = '[I]mage paste' })
+vim.keymap.set('n', '<leader>nw', ':Obsidian workspace<CR>', { desc = '[W]orkspace' })
+vim.keymap.set('n', '<leader>nt', ':Obsidian toggle_checkbox<CR>', { desc = '[T]oggle checkbox' })
+vim.keymap.set('n', '<leader>nc', ':Obsidian toc<CR>', { desc = 'Table of [C]ontents' })
+
+
+vim.keymap.set('n', '<leader>nd', ':Obsidian today<CR>', { desc = '[D]aily note' })
+vim.keymap.set('n', '<leader>ny', ':Obsidian yesterday<CR>', { desc = '[Y]esterday note' })
 
 -- AI
 vim.keymap.set({ 'n', 'v' }, '<leader>ac', ':CodeCompanionChat Toggle<cr>', { desc = '[C]hat toggle' })
 vim.keymap.set({ 'n', 'v' }, '<leader>aa', ':CodeCompanionActions<cr>', { desc = '[A]ctions' })
 vim.keymap.set({ 'v' }, '<leader>av', ':CodeCompanionChat Add<cr>', { desc = 'Add [V]isual' })
+vim.keymap.set('n', '<leader>aq', ':lua _kiro_toggle()<CR>', { desc = 'Kiro [Q]' })
 
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
@@ -317,6 +345,7 @@ require('lazy').setup({
         { '<leader>f', icon = { icon = '󰉼', color = 'blue' } },
         { '<leader>g', group = 'Git', icon = { icon = '󰊢', color = 'red' } },
         { '<leader>h', group = 'Hunk', icon = { icon = '󰊢', color = 'red' }, mode = { 'n', 'v' } },
+        { '<leader>n', group = 'Notes/MD', icon = { icon = '󰎞', color = 'cyan' } },
         { '<leader>q', icon = { icon = '󰒡', color = 'yellow' } },
         { '<leader>r', group = 'Rename', icon = { icon = '󰏪', color = 'purple' } },
         { '<leader>s', group = 'Search', icon = { icon = '󰍉', color = 'green' } },
@@ -428,7 +457,6 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>sb', builtin.buffers, { desc = '[B]uffers' })
       vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[D]iagnostics' })
       vim.keymap.set('n', '<leader>sp', builtin.resume, { desc = '[P]revious (resume)' })
-      vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[R]esume' })
       vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = 'Recent [.]' })
       vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = 'Find buffers' })
 
@@ -536,7 +564,7 @@ require('lazy').setup({
 
           -- Execute a code action, usually your cursor needs to be on top of an error
           -- or a suggestion from your LSP for this to activate.
-          map('gra', vim.lsp.buf.code_action, '[G]oto Code [A]ction', { 'n', 'x' })
+          -- NOTE: gra and <leader>ca mapped globally below LspAttach to avoid per-client override
 
           -- Find references for the word under your cursor.
           map('grr', require('telescope.builtin').lsp_references, '[G]oto [R]eferences')
@@ -621,11 +649,15 @@ require('lazy').setup({
         end,
       })
 
+      -- Code action via actions-preview (better UI with diff preview)
+      vim.keymap.set({ 'n', 'x' }, 'gra', require('actions-preview').code_actions, { desc = 'Code Action' })
+      vim.keymap.set({ 'n', 'x' }, '<leader>ca', require('actions-preview').code_actions, { desc = 'Code Action' })
+
       -- Diagnostic Config
       -- See :help vim.diagnostic.Opts
       vim.diagnostic.config {
         severity_sort = true,
-        float = { border = 'rounded', source = 'if_many' },
+        float = { border = 'rounded', source = true },
         underline = { severity = vim.diagnostic.severity.ERROR },
         signs = vim.g.have_nerd_font and {
           text = {
@@ -636,7 +668,7 @@ require('lazy').setup({
           },
         } or {},
         virtual_text = {
-          source = 'if_many',
+          source = true,
           spacing = 2,
           format = function(diagnostic)
             local diagnostic_message = {
@@ -655,6 +687,8 @@ require('lazy').setup({
       --  When you add blink.cmp, luasnip, etc. Neovim now has *more* capabilities.
       --  So, we create new capabilities with blink.cmp, and then broadcast that to the servers.
       local capabilities = require('blink.cmp').get_lsp_capabilities()
+
+      -- Grammar/spelling handled by harper_ls (no custom handlers needed)
 
       -- Enable the following language servers
       --  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
@@ -678,7 +712,11 @@ require('lazy').setup({
               },
             },
           },
+          capabilities = {
+            workspace = { didChangeWatchedFiles = { dynamicRegistration = false } },
+          },
         },
+        ruff = {},
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
@@ -690,16 +728,21 @@ require('lazy').setup({
         --
 
         lua_ls = {
-          -- cmd = { ... },
-          -- filetypes = { ... },
-          -- capabilities = {},
           settings = {
             Lua = {
               completion = {
                 callSnippet = 'Replace',
               },
-              -- You can toggle below to ignore Lua_LS's noisy `missing-fields` warnings
-              -- diagnostics = { disable = { 'missing-fields' } },
+            },
+          },
+        },
+        harper_ls = {
+          filetypes = { 'markdown', 'quarto', 'mail', 'text', 'tex', 'latex' },
+          settings = {
+            ['harper-ls'] = {
+              markdown = {
+                IgnoreLinkTitle = true,
+              },
             },
           },
         },
@@ -721,6 +764,7 @@ require('lazy').setup({
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
         'stylua', -- Used to format Lua code
+        'ruff', -- Python linter + formatter
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
@@ -758,10 +802,7 @@ require('lazy').setup({
     opts = {
       notify_on_error = false,
       format_on_save = function(bufnr)
-        -- Disable "format_on_save lsp_fallback" for languages that don't
-        -- have a well standardized coding style. You can add additional
-        -- languages here or re-enable it for the disabled ones.
-        local disable_filetypes = { c = true, cpp = true, yaml = true }
+        local disable_filetypes = { c = true, cpp = true, yaml = true, markdown = true, quarto = true }
         if disable_filetypes[vim.bo[bufnr].filetype] then
           return nil
         else
@@ -774,8 +815,10 @@ require('lazy').setup({
       formatters_by_ft = {
         lua = { 'stylua' },
         -- Conform can also run multiple formatters sequentially
-        -- python = { "isort", "black" },
-        markdown = { 'pretter', 'markdownlint-cli2', stop_after_first = true },
+        python = { 'ruff_organize_imports', 'ruff_format' },
+        markdown = { 'injected', 'markdownlint-cli2' },
+        quarto = { 'injected', 'markdownlint-cli2' },
+        mail = { 'injected' },
         --
         -- You can use 'stop_after_first' to run the first available formatter from the list
         -- javascript = { , "prettier", stop_after_first = true },
@@ -784,6 +827,18 @@ require('lazy').setup({
         formatters = {
           ['markdownlint-cli2'] = {
             args = { '--config', vim.fn.expand '$HOME/.markdownlint-cli2.yaml', '--fix', '$FILENAME' },
+          },
+          injected = {
+            options = {
+              ignore_errors = false,
+              lang_to_ext = {
+                markdown = 'md',
+                python = 'py',
+                r = 'r',
+                rust = 'rs',
+                lua = 'lua',
+              },
+            },
           },
         },
       },
@@ -840,6 +895,8 @@ require('lazy').setup({
       keymap = {
         preset = 'enter',
         ['<c-y>'] = { 'show', 'show_documentation', 'hide_documentation' },
+        ['<c-d>'] = { 'scroll_documentation_down', 'fallback' },
+        ['<c-u>'] = { 'scroll_documentation_up', 'fallback' },
         ['<c-k>'] = {},
       },
       cmdline = {
@@ -847,6 +904,9 @@ require('lazy').setup({
       },
       sources = {
         default = { 'lazydev', 'lsp', 'path', 'references', 'git', 'snippets', 'buffer', 'emoji', 'latex', 'spell' },
+        per_filetype = {
+          codecompanion = { 'codecompanion', 'path' },
+        },
         providers = {
           lazydev = { module = 'lazydev.integrations.blink', score_offset = 100 },
           git = {
@@ -860,6 +920,9 @@ require('lazy').setup({
           spell = {
             name = 'Spell',
             module = 'blink-cmp-spell',
+            enabled = function()
+              return vim.tbl_contains({ 'markdown', 'quarto', 'tex', 'mail' }, vim.bo.filetype)
+            end,
             opts = {
               enable_in_context = function()
                 local curpos = vim.api.nvim_win_get_cursor(0)
@@ -915,11 +978,41 @@ require('lazy').setup({
       completion = {
         documentation = {
           auto_show = true,
-          auto_show_delay_ms = 100,
+          auto_show_delay_ms = 200,
           treesitter_highlighting = true,
+          window = {
+            min_width = 10,
+            max_width = 60,
+            max_height = 20,
+            border = 'rounded',
+          },
         },
         menu = {
           auto_show = true,
+          draw = {
+            columns = { { 'kind_icon' }, { 'label', 'label_description', gap = 1 }, { 'source_icon' } },
+            components = {
+              source_icon = {
+                ellipsis = false,
+                text = function(ctx)
+                  local icons = {
+                    lsp = '󰞵',
+                    path = '󰉋',
+                    buffer = '󰈙',
+                    snippets = '󰩫',
+                    lazydev = '󰢱',
+                    codecompanion = '󱜸',
+                    pandoc_references = '󰈔',
+                    Git = '󰊢',
+                    Spell = '󰓆',
+                    Emoji = '󰞅',
+                    Latex = '󰿈',
+                  }
+                  return icons[ctx.source_name] or ctx.source_name
+                end,
+              },
+            },
+          },
         },
         ghost_text = {
           enabled = false,
@@ -1011,6 +1104,19 @@ require('lazy').setup({
   -- },
   -- Highlight todo, notes, etc in comments
   { 'folke/todo-comments.nvim', event = 'VimEnter', dependencies = { 'nvim-lua/plenary.nvim' }, opts = { signs = false } },
+  {
+    'folke/trouble.nvim',
+    cmd = 'Trouble',
+    dependencies = { 'nvim-tree/nvim-web-devicons' },
+    opts = {},
+    keys = {
+      { '<leader>qd', '<cmd>Trouble diagnostics toggle<CR>', desc = '[D]iagnostics' },
+      { '<leader>qb', '<cmd>Trouble diagnostics toggle filter.buf=0<CR>', desc = '[B]uffer diagnostics' },
+      { '<leader>qs', '<cmd>Trouble symbols toggle<CR>', desc = '[S]ymbols' },
+      { '<leader>ql', '<cmd>Trouble loclist toggle<CR>', desc = '[L]oclist' },
+      { '<leader>qf', '<cmd>Trouble qflist toggle<CR>', desc = 'Quick[F]ix' },
+    },
+  },
 
   { -- Collection of various small independent plugins/modules
     'echasnovski/mini.nvim',
@@ -1185,9 +1291,37 @@ require('lazy').setup({
   -- require 'kickstart.plugins.debug',
   -- require 'kickstart.plugins.indent_line',
   require 'kickstart.plugins.lint',
+  -- Grammar/spelling: harper_ls (no plugins needed, standard LSP code actions)
+  {
+    'aznhe21/actions-preview.nvim',
+    dependencies = { 'nvim-telescope/telescope.nvim' },
+    config = function()
+      require('actions-preview').setup {
+        diff = { algorithm = 'patience' },
+        backend = { 'telescope' },
+        telescope = {
+          sorting_strategy = 'ascending',
+          layout_strategy = 'vertical',
+          layout_config = {
+            width = 0.6,
+            height = 0.5,
+          },
+        },
+        highlight_command = { require('actions-preview.highlight').delta 'delta --side-by-side' },
+      }
+    end,
+  },
   -- require 'kickstart.plugins.autopairs',
   -- require 'kickstart.plugins.neo-tree',
   -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
+  -- jupytext: open ipynb as quarto
+  {
+    'GCBallesteros/jupytext.nvim',
+    opts = {
+      style = 'quarto',
+      force_ft = 'quarto',
+    },
+  },
   -- quarto
   {
     'quarto-dev/quarto-nvim',
@@ -1481,14 +1615,33 @@ require('lazy').setup({
   --markdown
   {
     'MeanderingProgrammer/render-markdown.nvim',
-    ft = { 'markdown', 'quarto', 'codecompanion', 'Avante' },
+    ft = { 'markdown', 'quarto', 'codecompanion' },
     opts = {
-      file_types = { 'markdown', 'quarto', 'codecompanion', 'Avante' },
+      file_types = { 'markdown', 'quarto', 'codecompanion' },
+      heading = {
+        sign = false,
+        icons = { '▌ ', '▌▌ ', '▌▌▌ ', '▌▌▌▌ ', '▌▌▌▌▌ ', '▌▌▌▌▌▌ ' },
+        width = 'full',
+      },
+      checkbox = {
+        unchecked = { icon = '󰄱 ', highlight = 'RenderMarkdownUnchecked' },
+        checked = { icon = '󰱒 ', highlight = 'RenderMarkdownChecked', scope_highlight = 'RenderMarkdownChecked' },
+        custom = {
+          progress = { raw = '[/]', rendered = '󰦖 ', highlight = 'RenderMarkdownTodo' },
+          important = { raw = '[!]', rendered = '󰀦 ', highlight = 'RenderMarkdownError' },
+          question = { raw = '[?]', rendered = '󰘥 ', highlight = 'RenderMarkdownWarn' },
+        },
+      },
+      code = {
+        language_name = true,
+        language_icon = true,
+        language_map = {
+          dataviewjs = 'javascript',
+          dataview = 'sql',
+        },
+      },
       latex = {
-        enabled = false, -- utftex not good, trial snacks img
-        -- render_modes = false,
-        -- converter = 'utftex',
-        -- top_pad = 1,
+        enabled = false,
       },
     },
     dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' }, -- if you prefer nvim-web-devicons
@@ -1577,6 +1730,11 @@ require('lazy').setup({
       ui = {
         enable = false, -- set to false to disable all additional syntax features
       },
+      checkbox = {
+        enabled = true,
+        create_new = false,
+        order = { ' ', '/', 'x', '!', '?' },
+      },
       -- Specify how to handle attachments.
       attachments = {
         -- The default folder to place images in via `:ObsidianPasteImg`.
@@ -1587,8 +1745,9 @@ require('lazy').setup({
         -- Optional, customize the default name or prefix when pasting images via `:ObsidianPasteImg`.
         ---@return string
         img_name_func = function()
-          -- Prefix image names with timestamp.
-          return string.format('%s-', os.time())
+          -- Match Obsidian naming: NoteName_YYYYMMDD
+          local note = vim.fn.expand '%:t:r'
+          return note .. '_' .. os.date '%Y%m%d'
         end,
 
         -- A function that determines the text to insert in the note when pasting an image.
@@ -1838,6 +1997,36 @@ require('lazy').setup({
   },
   -- git conflict
   { 'akinsho/git-conflict.nvim', version = '*', event = 'BufReadPost', config = true },
+
+  -- Sticky context: shows parent headings/functions at top of screen
+  {
+    'nvim-treesitter/nvim-treesitter-context',
+    event = 'BufReadPost',
+    opts = {
+      max_lines = 3,
+      multiline_threshold = 1,
+    },
+    keys = {
+      { '<leader>cx', '<cmd>TSContextToggle<CR>', desc = 'Toggle treesitter conte[X]t' },
+    },
+  },
+
+  -- Auto-save on leaving insert mode or focus lost
+  {
+    'okuuva/auto-save.nvim',
+    event = { 'InsertLeave', 'TextChanged' },
+    opts = {
+      debounce_delay = 3000,
+      condition = function(buf)
+        -- Don't auto-save special buffers
+        local ft = vim.bo[buf].filetype
+        if vim.tbl_contains({ 'oil', 'neo-tree', 'toggleterm', 'codecompanion' }, ft) then
+          return false
+        end
+        return true
+      end,
+    },
+  },
   --tree
   --indent line
   {
@@ -1934,32 +2123,24 @@ require('lazy').setup({
           enabled = false,
         },
         extensions = {
-          -- mcphub = {
-          --   callback = 'mcphub.extensions.codecompanion',
-          --   opts = {
-          --     -- MCP Tools
-          --     make_tools = true, -- Make individual tools (@server__tool) and server groups (@server) from MCP servers
-          --     show_server_tools_in_chat = true, -- Show individual tools in chat completion (when make_tools=true)
-          --     add_mcp_prefix_to_tool_names = false, -- Add mcp__ prefix (e.g `@mcp__github`, `@mcp__neovim__list_issues`)
-          --     show_result_in_chat = true, -- Show tool results directly in chat buffer
-          --     format_tool = nil, -- function(tool_name:string, tool: CodeCompanion.Agent.Tool) : string Function to format tool names to show in the chat buffer
-          --     -- MCP Resources
-          --     make_vars = true, -- Convert MCP resources to #variables for prompts
-          --     -- MCP Prompts
-          --     make_slash_commands = true, -- Add MCP prompts as /slash commands
-          --   },
-          -- },
-        },
-        interactions = {
-          agent = {
-            adapter = 'kiro',
+          mcphub = {
+            callback = 'mcphub.extensions.codecompanion',
+            opts = {
+              make_tools = true,
+              show_server_tools_in_chat = true,
+              add_mcp_prefix_to_tool_names = false,
+              show_result_in_chat = true,
+              make_vars = false,
+              make_slash_commands = true,
+            },
           },
+        },
+        strategies = {
           chat = {
             adapter = 'kiro',
           },
-          inline = {
-            adapter = 'kiro',
-          },
+          inline = { adapter = 'kiro' },
+          agent = { adapter = 'kiro' },
         },
         display = {
           diff = {
@@ -2042,6 +2223,7 @@ require('lazy').setup({
   {
     'ravitemer/mcphub.nvim',
     cmd = { 'MCPHub' },
+    event = 'VeryLazy',
     dependencies = {
       'nvim-lua/plenary.nvim',
     },
@@ -2200,11 +2382,11 @@ local neogit = require 'neogit'
 neogit.setup {}
 vim.keymap.set('n', '<leader>gg', ':Neogit<CR>', { desc = 'Neo[G]it' })
 
--- AmazonQ quick term
+-- Kiro quick term
 local Terminal = require('toggleterm.terminal').Terminal
-local aq = Terminal:new {
+local kiro = Terminal:new {
   cmd = 'q',
-  name = 'AmazonQ',
+  name = 'Kiro',
   count = 5,
   direction = 'float',
   float_opts = {
@@ -2212,13 +2394,10 @@ local aq = Terminal:new {
   },
 }
 
-function _aq_toggle()
-  aq:toggle()
+function _kiro_toggle()
+  kiro:toggle()
 end
 
--- vim.api.nvim_set_keymap("n", "<leader>cq", "<cmd>lua _aq_toggle()<CR>", {noremap = true, silent = true})
-vim.keymap.set('n', '<leader>cq', ':lua _aq_toggle()<CR>', { desc = 'Amazon [Q]' })
--- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
 --
 --  Yank paths

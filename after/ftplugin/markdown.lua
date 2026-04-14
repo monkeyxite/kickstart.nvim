@@ -7,5 +7,4 @@ vim.wo.linebreak = true
 vim.wo.breakindent = true
 vim.wo.showbreak = '|'
 
--- indent the wrappped line
 vim.opt_local.conceallevel = 2

@@ -333,6 +333,14 @@
     "description": "Add minimal yaml header",
     "prefix": "yml"
   },
+  "content-hidden": {
+    "prefix": ["chidden"],
+    "body": ["::: {.content-hidden when-format=\"${1:revealjs}\"}", "$0", ":::"]
+  },
+  "content-visible": {
+    "prefix": ["cvisible"],
+    "body": ["::: {.content-visible when-format=\"${1:revealjs}\"}", "$0", ":::"]
+  },
   "ref a wrap figure": {
     "body": "Fig. \\ref{fig-$1}",
     "description": "refer to a label for a wrap figure",
