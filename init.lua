@@ -650,8 +650,8 @@ require('lazy').setup({
       })
 
       -- Code action via actions-preview (better UI with diff preview)
-      vim.keymap.set({ 'n', 'x' }, 'gra', require('actions-preview').code_actions, { desc = 'Code Action' })
-      vim.keymap.set({ 'n', 'x' }, '<leader>ca', require('actions-preview').code_actions, { desc = 'Code Action' })
+      vim.keymap.set({ 'n', 'x' }, 'gra', function() require('actions-preview').code_actions() end, { desc = 'Code Action' })
+      vim.keymap.set({ 'n', 'x' }, '<leader>ca', function() require('actions-preview').code_actions() end, { desc = 'Code Action' })
 
       -- Diagnostic Config
       -- See :help vim.diagnostic.Opts
@@ -1256,7 +1256,6 @@ require('lazy').setup({
       'nvim-treesitter/nvim-treesitter-textobjects',
     },
     build = ':TSUpdate',
-    main = 'nvim-treesitter.configs', -- Sets main module to use for opts
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
     opts = {
       ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc', 'yaml' },
@@ -1294,6 +1293,7 @@ require('lazy').setup({
   -- Grammar/spelling: harper_ls (no plugins needed, standard LSP code actions)
   {
     'aznhe21/actions-preview.nvim',
+    event = 'LspAttach',
     dependencies = { 'nvim-telescope/telescope.nvim' },
     config = function()
       require('actions-preview').setup {
@@ -1547,6 +1547,9 @@ require('lazy').setup({
   {
     'TimUntersberger/neogit',
     cmd = 'Neogit',
+    keys = {
+      { '<leader>gg', '<cmd>Neogit<CR>', desc = 'Neo[G]it' },
+    },
     dependencies = {
       'nvim-lua/plenary.nvim',
       { 'sindrets/diffview.nvim', cmd = { 'DiffviewOpen', 'DiffviewFileHistory' } },
@@ -2375,12 +2378,6 @@ require('lazy').setup({
     },
   },
 })
-
--- Magit for vim
--- For more, see: https://github.com/NeogitOrg/neogit
-local neogit = require 'neogit'
-neogit.setup {}
-vim.keymap.set('n', '<leader>gg', ':Neogit<CR>', { desc = 'Neo[G]it' })
 
 -- Kiro quick term
 local Terminal = require('toggleterm.terminal').Terminal
