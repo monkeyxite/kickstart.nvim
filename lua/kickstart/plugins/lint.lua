@@ -4,10 +4,8 @@ return {
   config = function()
     local lint = require 'lint'
     lint.linters_by_ft = {
-      markdown = { 'markdownlint-cli2', 'vale' },
-      quarto = { 'markdownlint-cli2', 'vale' },
-      mail = { 'vale' },
-      text = { 'vale' },
+      markdown = { 'markdownlint-cli2' },
+      quarto = { 'markdownlint-cli2' },
     }
 
     lint.linters['markdownlint-cli2'].args = { '--config', vim.fn.expand '$HOME/.markdownlint-cli2.yaml', '-' }

@@ -29,9 +29,7 @@ vim.o.showmode = false
 --  Schedule the setting after `UiEnter` because it can increase startup-time.
 --  Remove this option if you want your OS clipboard to remain independent.
 --  See `:help 'clipboard'`
-vim.schedule(function()
-  vim.o.clipboard = 'unnamedplus'
-end)
+vim.schedule(function() vim.o.clipboard = 'unnamedplus' end)
 
 -- Enable break indent
 vim.o.breakindent = true
@@ -95,6 +93,8 @@ vim.opt.laststatus = 3
 -- disable netrw at the very start of your init.lua
 vim.g.loaded_netrw = 1
 vim.g.loaded_netrwPlugin = 1
+-- Create empty augroup so plugins clearing it don't error (E216)
+vim.api.nvim_create_augroup('FileExplorer', { clear = true })
 
 -- Clear highlights on search when pressing <Esc> in normal mode
 --  See `:help hlsearch`
@@ -174,7 +174,6 @@ vim.keymap.set('n', '<leader>nw', ':Obsidian workspace<CR>', { desc = '[W]orkspa
 vim.keymap.set('n', '<leader>nt', ':Obsidian toggle_checkbox<CR>', { desc = '[T]oggle checkbox' })
 vim.keymap.set('n', '<leader>nc', ':Obsidian toc<CR>', { desc = 'Table of [C]ontents' })
 
-
 vim.keymap.set('n', '<leader>nd', ':Obsidian today<CR>', { desc = '[D]aily note' })
 vim.keymap.set('n', '<leader>ny', ':Obsidian yesterday<CR>', { desc = '[Y]esterday note' })
 
@@ -193,17 +192,13 @@ vim.keymap.set('n', '<leader>aq', ':lua _kiro_toggle()<CR>', { desc = 'Kiro [Q]'
 vim.api.nvim_create_autocmd('TextYankPost', {
   desc = 'Highlight when yanking (copying) text',
   group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
-  callback = function()
-    vim.hl.on_yank()
-  end,
+  callback = function() vim.hl.on_yank() end,
 })
 --clean linenum
 vim.api.nvim_create_autocmd('TermOpen', {
   desc = 'remove linenum in Term',
   group = vim.api.nvim_create_augroup('kickstart-termopen', { clear = true }),
-  callback = function()
-    vim.wo.number = false
-  end,
+  callback = function() vim.wo.number = false end,
 })
 
 -- [[ Install `lazy.nvim` plugin manager ]]
@@ -212,9 +207,7 @@ local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
   local lazyrepo = 'https://github.com/folke/lazy.nvim.git'
   local out = vim.fn.system { 'git', 'clone', '--filter=blob:none', '--branch=stable', lazyrepo, lazypath }
-  if vim.v.shell_error ~= 0 then
-    error('Error cloning lazy.nvim:\n' .. out)
-  end
+  if vim.v.shell_error ~= 0 then error('Error cloning lazy.nvim:\n' .. out) end
 end
 
 ---@type vim.Option
@@ -383,9 +376,7 @@ require('lazy').setup({
 
         -- `cond` is a condition used to determine whether this plugin should be
         -- installed and loaded.
-        cond = function()
-          return vim.fn.executable 'make' == 1
-        end,
+        cond = function() return vim.fn.executable 'make' == 1 end,
       },
       { 'nvim-telescope/telescope-ui-select.nvim' },
 
@@ -471,17 +462,20 @@ require('lazy').setup({
 
       -- It's also possible to pass additional configuration options.
       --  See `:help telescope.builtin.live_grep()` for information about particular keys
-      vim.keymap.set('n', '<leader>s/', function()
-        builtin.live_grep {
-          grep_open_files = true,
-          prompt_title = 'Live Grep in Open Files',
-        }
-      end, { desc = '[S]earch [/] in Open Files' })
+      vim.keymap.set(
+        'n',
+        '<leader>s/',
+        function()
+          builtin.live_grep {
+            grep_open_files = true,
+            prompt_title = 'Live Grep in Open Files',
+          }
+        end,
+        { desc = '[S]earch [/] in Open Files' }
+      )
 
       -- Shortcut for searching your Neovim configuration files
-      vim.keymap.set('n', '<leader>sn', function()
-        builtin.find_files { cwd = vim.fn.stdpath 'config' }
-      end, { desc = '[S]earch [N]eovim files' })
+      vim.keymap.set('n', '<leader>sn', function() builtin.find_files { cwd = vim.fn.stdpath 'config' } end, { desc = '[S]earch [N]eovim files' })
     end,
   },
 
@@ -642,9 +636,7 @@ require('lazy').setup({
           --
           -- This may be unwanted, since they displace some of your code
           if client and client_supports_method(client, vim.lsp.protocol.Methods.textDocument_inlayHint, event.buf) then
-            map('<leader>ch', function()
-              vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf })
-            end, 'Inlay [H]ints toggle')
+            map('<leader>ch', function() vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf }) end, 'Inlay [H]ints toggle')
           end
         end,
       })
@@ -792,9 +784,7 @@ require('lazy').setup({
     keys = {
       {
         '<leader>f',
-        function()
-          require('conform').format { async = true, lsp_format = 'fallback' }
-        end,
+        function() require('conform').format { async = true, lsp_format = 'fallback' } end,
         mode = '',
         desc = '[F]ormat buffer',
       },
@@ -880,9 +870,7 @@ require('lazy').setup({
         'L3MON4D3/LuaSnip',
         version = '2.*',
         build = (function()
-          if vim.fn.has 'win32' == 1 or vim.fn.executable 'make' == 0 then
-            return
-          end
+          if vim.fn.has 'win32' == 1 or vim.fn.executable 'make' == 0 then return end
           return 'make install_jsregexp'
         end)(),
         opts = {},
@@ -913,16 +901,12 @@ require('lazy').setup({
             module = 'blink-cmp-git',
             name = 'Git',
             opts = {},
-            enabled = function()
-              return vim.tbl_contains({ 'octo', 'gitcommit', 'git' }, vim.bo.filetype)
-            end,
+            enabled = function() return vim.tbl_contains({ 'octo', 'gitcommit', 'git' }, vim.bo.filetype) end,
           },
           spell = {
             name = 'Spell',
             module = 'blink-cmp-spell',
-            enabled = function()
-              return vim.tbl_contains({ 'markdown', 'quarto', 'tex', 'mail' }, vim.bo.filetype)
-            end,
+            enabled = function() return vim.tbl_contains({ 'markdown', 'quarto', 'tex', 'mail' }, vim.bo.filetype) end,
             opts = {
               enable_in_context = function()
                 local curpos = vim.api.nvim_win_get_cursor(0)
@@ -943,9 +927,7 @@ require('lazy').setup({
             module = 'blink-emoji',
             name = 'Emoji',
             score_offset = -1,
-            enabled = function()
-              return vim.tbl_contains({ 'markdown', 'quarto' }, vim.bo.filetype)
-            end,
+            enabled = function() return vim.tbl_contains({ 'markdown', 'quarto' }, vim.bo.filetype) end,
           },
           references = {
             name = 'pandoc_references',
@@ -962,9 +944,7 @@ require('lazy').setup({
                   scope = 'local',
                   buf = ctx.bufnr,
                 })
-                if ft == 'tex' or ft == 'quarto' or ft == 'latex' then
-                  return true
-                end
+                if ft == 'tex' or ft == 'quarto' or ft == 'latex' then return true end
                 return false
               end,
             },
@@ -1147,9 +1127,7 @@ require('lazy').setup({
       -- default behavior. For example, here we set the section for
       -- cursor location to LINE:COLUMN
       ---@diagnostic disable-next-line: duplicate-set-field
-      statusline.section_location = function()
-        return '%2l:%-2v'
-      end
+      statusline.section_location = function() return '%2l:%-2v' end
 
       -- files
       require('mini.files').setup()
@@ -1241,9 +1219,7 @@ require('lazy').setup({
           prompt = 'Save session as: ',
           cancelreturn = false,
         })
-        if not ok or res == false then
-          return nil
-        end
+        if not ok or res == false then return nil end
         MiniSessions.write(res)
       end, { desc = 'Save Session' })
       --  Check out: https://github.com/echasnovski/mini.nvim
@@ -1367,9 +1343,7 @@ require('lazy').setup({
     dev = false,
     init = function()
       vim.b['quarto_is_python_chunk'] = false
-      Quarto_is_in_python_chunk = function()
-        require('otter.tools.functions').is_otter_language_context 'python'
-      end
+      Quarto_is_in_python_chunk = function() require('otter.tools.functions').is_otter_language_context 'python' end
 
       vim.cmd [[
       let g:slime_dispatch_ipython_pause = 100
@@ -1402,14 +1376,10 @@ require('lazy').setup({
         vim.print('job_id: ' .. job_id)
       end
 
-      local function set_terminal()
-        vim.fn.call('slime#config', {})
-      end
+      local function set_terminal() vim.fn.call('slime#config', {}) end
       vim.keymap.set('n', '<leader>ct', mark_terminal, { desc = 'Mark [T]erminal' })
       vim.keymap.set('n', '<leader>cs', set_terminal, { desc = '[S]et terminal' })
-      vim.keymap.set({ 'n', 'i' }, '<M-cr>', function()
-        vim.cmd [[call slime#send_cell()]]
-      end, { desc = 'send code cell to term' })
+      vim.keymap.set({ 'n', 'i' }, '<M-cr>', function() vim.cmd [[call slime#send_cell()]] end, { desc = 'send code cell to term' })
     end,
   },
   --mail
@@ -1439,9 +1409,7 @@ require('lazy').setup({
 
       -- Markdown snippets in mail
       local ok_ls, ls = pcall(require, 'luasnip')
-      if ok_ls then
-        ls.filetype_extend('mail', { 'markdown' })
-      end
+      if ok_ls then ls.filetype_extend('mail', { 'markdown' }) end
 
       vim.api.nvim_create_autocmd('FileType', {
         pattern = 'mail',
@@ -1460,9 +1428,7 @@ require('lazy').setup({
               elseif line:match '^From:.*monkeyxite' or line:match '^From:.*gmail' then
                 acct = '-e "source ~/.config/mutt/accounts/1-monkeyxite@gmail.com.muttrc"'
               end
-              if line:match '^#' then
-                has_markdown = true
-              end
+              if line:match '^#' then has_markdown = true end
             end
             vim.cmd 'write'
             if has_markdown then
@@ -1479,9 +1445,7 @@ require('lazy').setup({
           local function highlight_headers()
             vim.api.nvim_buf_clear_namespace(0, ns, 0, -1)
             for i, line in ipairs(vim.api.nvim_buf_get_lines(0, 0, -1, false)) do
-              if line == '' then
-                break
-              end
+              if line == '' then break end
               local colon = line:find ':'
               if colon then
                 vim.api.nvim_buf_add_highlight(0, ns, '@keyword', i - 1, 0, colon)
@@ -1561,9 +1525,7 @@ require('lazy').setup({
     'iamcco/markdown-preview.nvim',
     ft = { 'markdown', 'quarto' },
     cmd = { 'MarkdownPreviewToggle', 'MarkdownPreview', 'MarkdownPreviewStop' },
-    build = function()
-      vim.fn['mkdp#util#install']()
-    end,
+    build = function() vim.fn['mkdp#util#install']() end,
     config = function()
       vim.g.mkdp_auto_start = 1
       vim.g.mkdp_filetypes = { 'markdown', 'quarto' }
@@ -1712,15 +1674,15 @@ require('lazy').setup({
       workspaces = {
         {
           name = 'personal',
-          path = '/Users/ehoujin/knowledgebase',
+          path = vim.fn.expand '~/knowledgebase',
         },
         {
           name = 'work',
-          path = '/Users/ehoujin/OneDrive - Ericsson/Documents/Radio_KB',
+          path = vim.fn.expand '~/Library/CloudStorage/OneDrive-Ericsson/Documents/Radio_KB',
         },
         {
           name = 'asgard',
-          path = '/Users/ehoujin/Ericsson - Remote Radio Global Solution Team - VIPP - VIPP/Anatomy',
+          path = vim.fn.expand '~/Ericsson/Remote Radio Global Solution Team - VIPP - VIPP/Anatomy',
         },
       },
       picker = { name = 'telescope.nvim' },
@@ -2023,9 +1985,7 @@ require('lazy').setup({
       condition = function(buf)
         -- Don't auto-save special buffers
         local ft = vim.bo[buf].filetype
-        if vim.tbl_contains({ 'oil', 'neo-tree', 'toggleterm', 'codecompanion' }, ft) then
-          return false
-        end
+        if vim.tbl_contains({ 'oil', 'neo-tree', 'toggleterm', 'codecompanion' }, ft) then return false end
         return true
       end,
     },
@@ -2231,9 +2191,7 @@ require('lazy').setup({
       'nvim-lua/plenary.nvim',
     },
     build = 'npm install -g mcp-hub@latest', -- Installs `mcp-hub` node binary globally
-    config = function()
-      require('mcphub').setup()
-    end,
+    config = function() require('mcphub').setup() end,
   },
   -- {
   --   'yetone/avante.nvim',
@@ -2391,19 +2349,11 @@ local kiro = Terminal:new {
   },
 }
 
-function _kiro_toggle()
-  kiro:toggle()
-end
+function _kiro_toggle() kiro:toggle() end
 
 -- vim: ts=2 sts=2 sw=2 et
 --
 --  Yank paths
-vim.keymap.set('n', '<leader>yp', function()
-  vim.fn.setreg('+', vim.fn.expand '%:p:.')
-end, { desc = 'File [P]ath' })
-vim.keymap.set('n', '<leader>yd', function()
-  vim.fn.setreg('+', vim.fn.expand '%:h')
-end, { desc = '[D]irectory' })
-vim.keymap.set('n', '<leader>yf', function()
-  vim.fn.setreg('+', vim.fn.expand '%:t:r')
-end, { desc = '[F]ile name' })
+vim.keymap.set('n', '<leader>yp', function() vim.fn.setreg('+', vim.fn.expand '%:p:.') end, { desc = 'File [P]ath' })
+vim.keymap.set('n', '<leader>yd', function() vim.fn.setreg('+', vim.fn.expand '%:h') end, { desc = '[D]irectory' })
+vim.keymap.set('n', '<leader>yf', function() vim.fn.setreg('+', vim.fn.expand '%:t:r') end, { desc = '[F]ile name' })
