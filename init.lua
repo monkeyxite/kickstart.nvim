@@ -813,8 +813,7 @@ require('lazy').setup({
         -- You can use 'stop_after_first' to run the first available formatter from the list
         -- javascript = { , "prettier", stop_after_first = true },
       },
-      opts = {
-        formatters = {
+      formatters = {
           ['markdownlint-cli2'] = {
             args = { '--config', vim.fn.expand '$HOME/.markdownlint-cli2.yaml', '--fix', '$FILENAME' },
           },
@@ -833,12 +832,12 @@ require('lazy').setup({
         },
       },
     },
-  },
 
   { -- Autocompletion
     'saghen/blink.cmp',
     enabled = true,
     dev = false,
+    version = '1.*',
     build = 'cargo build --release',
     lazy = false,
     dependencies = {
@@ -850,7 +849,7 @@ require('lazy').setup({
           require('luasnip').filetype_extend('quarto', { 'markdown' })
         end,
       },
-      { 'moyiz/blink-emoji.nvim' },
+      -- { 'moyiz/blink-emoji.nvim' },
       { 'Kaiser-Yang/blink-cmp-git' },
       {
         'saghen/blink.compat',
@@ -891,7 +890,7 @@ require('lazy').setup({
         enabled = false,
       },
       sources = {
-        default = { 'lazydev', 'lsp', 'path', 'references', 'git', 'snippets', 'buffer', 'emoji', 'latex', 'spell' },
+        default = { 'lazydev', 'lsp', 'path', 'references', 'git', 'snippets', 'buffer', 'latex', 'spell' },
         per_filetype = {
           codecompanion = { 'codecompanion', 'path' },
         },
@@ -923,12 +922,12 @@ require('lazy').setup({
               end,
             },
           },
-          emoji = {
-            module = 'blink-emoji',
-            name = 'Emoji',
-            score_offset = -1,
-            enabled = function() return vim.tbl_contains({ 'markdown', 'quarto' }, vim.bo.filetype) end,
-          },
+          -- emoji = {
+          --   module = 'blink-emoji',
+          --   name = 'Emoji',
+          --   score_offset = -1,
+          --   enabled = function() return vim.tbl_contains({ 'markdown', 'quarto' }, vim.bo.filetype) end,
+          -- },
           references = {
             name = 'pandoc_references',
             module = 'cmp-pandoc-references.blink',
@@ -964,7 +963,7 @@ require('lazy').setup({
             min_width = 10,
             max_width = 60,
             max_height = 20,
-            border = 'rounded',
+            border = { '╭', '─', '╮', '│', '╯', '─', '╰', '│' },
           },
         },
         menu = {
@@ -1638,9 +1637,11 @@ require('lazy').setup({
           enabled = true, -- disable math expression rendering, relying on render-markdown
         },
         resolve = function(path, src)
-          if require('obsidian.api').path_is_note(path) then
-            -- for setting both image review & paste if needed
-            return require('obsidian.api').resolve_image_path(src):gsub('3_Resource/assets/3_Resource/assets', '3_Resource/assets')
+          -- Find the workspace root containing this file
+          local api = require('obsidian.api')
+          local ws = api.find_workspace(path)
+          if ws then
+            return tostring(ws.root) .. '/3_Resource/assets/' .. src
           end
         end,
       },
@@ -1654,9 +1655,9 @@ require('lazy').setup({
     -- tag = "v2.15", -- uncomment to pin to a specific release
     init = function()
       -- VimTeX configuration goes here, e.g.
-      vim.g.vimtex_view_zathura_use_synctex = 0
-      -- vim.g.vimtex_view_method = 'zathura_simple'
-      vim.g.vimtex_view_method = 'zathura'
+      vim.g.vimtex_view_method = 'general'
+      vim.g.vimtex_view_general_viewer = 'sioyek'
+      vim.g.vimtex_view_general_options = '--inverse-search "/Users/ehoujin/.local/bin/sioyek-inverse %2 %1" --forward-search-file @tex --forward-search-line @line @pdf'
     end,
   },
   {

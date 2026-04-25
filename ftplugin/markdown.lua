@@ -13,6 +13,7 @@ vim.opt_local.foldopen:append { 'jump', 'mark', 'search' }
 
 vim.opt_local.spell = true
 vim.opt_local.spelllang = 'en'
+vim.opt_local.spellfile = vim.fn.stdpath('config') .. '/spell/en.utf-8.add'
 
 -- Fold with Enter
 vim.keymap.set('n', '<CR>', function()
