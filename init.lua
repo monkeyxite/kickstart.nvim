@@ -839,7 +839,7 @@ require('lazy').setup({
     dev = false,
     version = '1.*',
     build = 'cargo build --release',
-    lazy = false,
+    event = 'InsertEnter',
     dependencies = {
       {
         'rafamadriz/friendly-snippets',
@@ -1584,8 +1584,12 @@ require('lazy').setup({
       file_types = { 'markdown', 'quarto', 'codecompanion' },
       heading = {
         sign = false,
+        position = 'inline',
         icons = { '▌ ', '▌▌ ', '▌▌▌ ', '▌▌▌▌ ', '▌▌▌▌▌ ', '▌▌▌▌▌▌ ' },
-        width = 'full',
+        width = 'block',
+      },
+      bullet = {
+        icons = { '● ', '○ ', '◆ ', '◇ ' },
       },
       checkbox = {
         unchecked = { icon = '󰄱 ', highlight = 'RenderMarkdownUnchecked' },
