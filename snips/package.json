@@ -35,6 +35,10 @@
             {
                 "language": "tex",
                 "path": "./snippets/tex.json"
+            },
+            {
+                "language": "mail",
+                "path": "./snippets/mail.json"
             }
         ]
     }

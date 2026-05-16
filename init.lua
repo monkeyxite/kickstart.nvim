@@ -4,6 +4,9 @@
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ','
 
+-- Disable panache LSP auto-start (false-positive diagnostics on Obsidian links; used only as conform formatter)
+vim.lsp.enable('panache', false)
+
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = true
 
@@ -435,6 +438,8 @@ require('lazy').setup({
       -- Enable Telescope extensions if they are installed
       pcall(require('telescope').load_extension, 'fzf')
       pcall(require('telescope').load_extension, 'ui-select')
+      pcall(require('telescope').load_extension, 'nvim_mail')
+      vim.keymap.set('n', '<leader>sm', function() require('telescope').extensions.nvim_mail.search() end, { desc = '[S]earch [M]ail' })
       -- pcall(require('telescope').load_extension, 'projects')
 
       -- See `:help telescope.builtin`
@@ -476,6 +481,7 @@ require('lazy').setup({
 
       -- Shortcut for searching your Neovim configuration files
       vim.keymap.set('n', '<leader>sn', function() builtin.find_files { cwd = vim.fn.stdpath 'config' } end, { desc = '[S]earch [N]eovim files' })
+      vim.keymap.set('n', '<leader>sT', '<cmd>Telescope toggleterm<cr>', { desc = '[T]oggleTerm' })
     end,
   },
 
@@ -691,6 +697,7 @@ require('lazy').setup({
       --  - capabilities (table): Override fields in capabilities. Can be used to disable certain LSP features.
       --  - settings (table): Override the default settings passed when initializing the server.
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
+
       local servers = {
         -- clangd = {},
         -- gopls = {},
@@ -728,6 +735,16 @@ require('lazy').setup({
             },
           },
         },
+        bashls = {},
+        yamlls = {
+          settings = {
+            yaml = {
+              schemas = {},
+              validate = true,
+            },
+          },
+        },
+        -- panache: used only as conform formatter, not as LSP (false-positive diagnostics on Obsidian links)
         harper_ls = {
           filetypes = { 'markdown', 'quarto', 'mail', 'text', 'tex', 'latex' },
           settings = {
@@ -757,6 +774,8 @@ require('lazy').setup({
       vim.list_extend(ensure_installed, {
         'stylua', -- Used to format Lua code
         'ruff', -- Python linter + formatter
+        'shfmt', -- Shell formatter
+        'shellcheck', -- Shell linter (used by bashls)
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
@@ -765,6 +784,8 @@ require('lazy').setup({
         automatic_installation = false,
         handlers = {
           function(server_name)
+            -- Skip panache LSP (false-positive diagnostics on Obsidian links; used only as conform formatter)
+            if server_name == 'panache' then return end
             local server = servers[server_name] or {}
             -- This handles overriding only values explicitly passed
             -- by the server configuration above. Useful when disabling
@@ -806,14 +827,21 @@ require('lazy').setup({
         lua = { 'stylua' },
         -- Conform can also run multiple formatters sequentially
         python = { 'ruff_organize_imports', 'ruff_format' },
-        markdown = { 'injected', 'markdownlint-cli2' },
-        quarto = { 'injected', 'markdownlint-cli2' },
+        markdown = { 'panache' },
+        quarto = { 'panache' },
         mail = { 'injected' },
+        sh = { 'shfmt' },
+        bash = { 'shfmt' },
         --
         -- You can use 'stop_after_first' to run the first available formatter from the list
         -- javascript = { , "prettier", stop_after_first = true },
       },
       formatters = {
+          panache = {
+            command = 'panache',
+            args = { 'format', '--stdin-filename', '$FILENAME', '-' },
+            stdin = true,
+          },
           ['markdownlint-cli2'] = {
             args = { '--config', vim.fn.expand '$HOME/.markdownlint-cli2.yaml', '--fix', '$FILENAME' },
           },
@@ -893,6 +921,7 @@ require('lazy').setup({
         default = { 'lazydev', 'lsp', 'path', 'references', 'git', 'snippets', 'buffer', 'latex', 'spell' },
         per_filetype = {
           codecompanion = { 'codecompanion', 'path' },
+          mail = { 'mail_contacts', 'snippets', 'buffer', 'spell', 'path' },
         },
         providers = {
           lazydev = { module = 'lazydev.integrations.blink', score_offset = 100 },
@@ -932,6 +961,12 @@ require('lazy').setup({
             name = 'pandoc_references',
             module = 'cmp-pandoc-references.blink',
             score_offset = 2,
+          },
+          mail_contacts = {
+            name = 'Contacts',
+            module = 'nvim-mail.contacts',
+            score_offset = 10,
+            enabled = function() return vim.bo.filetype == 'mail' end,
           },
           symbols = { name = 'symbols', module = 'blink.compat.source' },
           latex = {
@@ -1382,121 +1417,37 @@ require('lazy').setup({
     end,
   },
   --mail
-  -- TODO to fix ft for mail to enable keymapping of spelling/mail
   {
-    'dbeniamine/vim-mail',
-    ft = 'mail',
-    init = function()
-      vim.cmd 'let g:VimMailDoNotMap=1'
-      vim.cmd "let g:VimMailContactsProvider=['khard']"
-      vim.cmd "let g:VimMailClient='neomutt'"
-      vim.cmd "let g:VimMailSpellLangs=['en', 'se']"
-      vim.cmd "let g:VimMailFromList = [ 'Jonny Hou <jonny.hou@ericsson.com>', 'Jonny Hou <jonny.hou@gmail.com>', 'Jonny Hou <monkeyxite@gmail.com>' ]"
-      vim.cmd 'let g:VimMailDoNotMap_m = 1'
-      vim.cmd 'let g:VimMailDoNotMap_m = 1'
-      vim.filetype.add {
-        extension = { eml = 'mail' },
-        pattern = {
-          ['/tmp/neomutt%-.*'] = 'mail',
-          ['/tmp/mutt%-.*'] = 'mail',
+    dir = '~/codebase/tools/nvim-mail',
+    opts = {
+      from_list = {
+        'Jonny Hou <jonny.hou@ericsson.com>',
+        'Jonny Hou <jonny.hou@gmail.com>',
+        'Jonny Hou <monkeyxite@gmail.com>',
+      },
+      spell_langs = { 'en', 'sv' },
+      send_accounts = {
+        ['ericsson'] = '-e "source ~/.config/mutt/accounts/2-work.muttrc"',
+        ['monkeyxite'] = '-e "source ~/.config/mutt/accounts/1-monkeyxite@gmail.com.muttrc"',
+        ['gmail'] = '-e "source ~/.config/mutt/accounts/1-monkeyxite@gmail.com.muttrc"',
+      },
+      contacts = {
+        from_map = { ['ericsson'] = 'work', ['gmail'] = 'personal', ['monkeyxite'] = 'personal' },
+        notmuch = true,
+        accounts = {
+          work = {
+            cmd = 'khard', args = { 'email', '-p', '--remove-first-line', '-A', 'work' },
+            notmuch_path = 'work',
+            from = 'Jonny Hou <jonny.hou@ericsson.com>',
+          },
+          personal = {
+            cmd = 'khard', args = { 'email', '-p', '--remove-first-line', '-A', 'personal' },
+            notmuch_path = 'monkeyxite@gmail.com',
+            from = 'Jonny Hou <monkeyxite@gmail.com>',
+          },
         },
-      }
-    end,
-    config = function()
-      -- Markdown treesitter for mail body
-      vim.treesitter.language.register('markdown', 'mail')
-
-      -- Markdown snippets in mail
-      local ok_ls, ls = pcall(require, 'luasnip')
-      if ok_ls then ls.filetype_extend('mail', { 'markdown' }) end
-
-      vim.api.nvim_create_autocmd('FileType', {
-        pattern = 'mail',
-        callback = function()
-          -- Start markdown treesitter
-          pcall(vim.treesitter.start, 0, 'markdown')
-
-          -- Send mail keybinding
-          vim.keymap.set('n', '<localleader>mm', function()
-            local lines = vim.api.nvim_buf_get_lines(0, 0, 20, false)
-            local acct = ''
-            local has_markdown = false
-            for _, line in ipairs(lines) do
-              if line:match '^From:.*ericsson' then
-                acct = '-e "source ~/.config/mutt/accounts/2-work.muttrc"'
-              elseif line:match '^From:.*monkeyxite' or line:match '^From:.*gmail' then
-                acct = '-e "source ~/.config/mutt/accounts/1-monkeyxite@gmail.com.muttrc"'
-              end
-              if line:match '^#' then has_markdown = true end
-            end
-            vim.cmd 'write'
-            if has_markdown then
-              vim.cmd 'write'
-              vim.fn.system('cat ' .. vim.fn.expand '%' .. ' | muttlook --action draft')
-              vim.cmd('terminal neomutt ' .. acct .. ' -H ' .. vim.fn.expand '%')
-            else
-              vim.cmd('terminal neomutt ' .. acct .. ' -H ' .. vim.fn.expand '%')
-            end
-          end, { buffer = true, desc = ' Send mail' })
-
-          -- Highlight mail headers
-          local ns = vim.api.nvim_create_namespace 'mail_headers'
-          local function highlight_headers()
-            vim.api.nvim_buf_clear_namespace(0, ns, 0, -1)
-            for i, line in ipairs(vim.api.nvim_buf_get_lines(0, 0, -1, false)) do
-              if line == '' then break end
-              local colon = line:find ':'
-              if colon then
-                vim.api.nvim_buf_add_highlight(0, ns, '@keyword', i - 1, 0, colon)
-                vim.api.nvim_buf_add_highlight(0, ns, '@string', i - 1, colon, -1)
-              end
-            end
-          end
-          highlight_headers()
-          vim.api.nvim_create_autocmd({ 'TextChanged', 'TextChangedI' }, { buffer = 0, callback = highlight_headers })
-
-          vim.opt_local.spell = true
-          vim.opt_local.spelllang = 'en,sv'
-          vim.opt_local.wrap = true
-          vim.opt_local.linebreak = true
-
-          -- Unmap vim-mail's ,m (replaced by ,S)
-          vim.defer_fn(function()
-            -- Clean any stray root-level mail mappings
-            for _, k in ipairs { ',q', ',m' } do
-              pcall(vim.keymap.del, 'n', k, { buffer = 0 })
-              pcall(vim.keymap.del, 'v', k, { buffer = 0 })
-              pcall(vim.keymap.del, '', k, { buffer = 0 })
-            end
-            -- All vim-mail keys under ,m prefix with mail icon
-            local mail_keys = {
-              { ',mq', '<Plug>MailQuote', ' Quote' },
-              { ',mm', 'send', ' Send mail' }, -- placeholder, actual func is above
-              { ',mt', ':call VimMailGoto("/^To","A") <CR>', ' To:' },
-              { ',mc', ':call VimMailGoto("/^Cc","A") <CR>', ' Cc:' },
-              { ',mb', ':call VimMailGoto("/^Bcc","A") <CR>', ' Bcc:' },
-              { ',ms', ':call VimMailGoto("/^Subject","A") <CR>', ' Subject:' },
-              { ',mf', ':call VimMailGoto("/^From","A") <CR>', ' From:' },
-              { ',mF', ':call vimmail#switchFrom() <CR>', ' Switch From' },
-              { ',mr', ':call VimMailGoto("/^>","I") <CR>', ' Jump to reply' },
-              { ',mR', ':call VimMailGoto("/^Reply-To","A") <CR>', ' Reply-To:' },
-              { ',mM', ':call VimMailStartClientRO() <CR>', ' Open neomutt' },
-              { ',mS', ':call VimMailGoto("/^-- ","j") <CR>', ' Jump to signature' },
-              { ',mB', ':call VimMailGoto("/^$","I") <CR>', ' Jump to body' },
-              { ',mE', ':call VimMailGoto("/^>","Nj") <CR>', ' End of reply' },
-              { ',ml', ':call vimmail#spelllang#SwitchSpellLangs()<CR>', ' Switch spell lang' },
-              { ',ma', ':call vimmail#contacts#sync()<CR>', ' Sync contacts' },
-              { ',mk', ':call VimMailKillQuotedSig() <CR>', ' Kill quoted sig' },
-            }
-            for _, k in ipairs(mail_keys) do
-              if k[1] ~= ',mm' then -- skip send placeholder
-                pcall(vim.keymap.set, 'n', k[1], k[2], { buffer = true, desc = k[3] })
-              end
-            end
-          end, 50)
-        end,
-      })
-    end,
+      },
+    },
   },
   {
     'liuchengxu/graphviz.vim',
@@ -1589,7 +1540,8 @@ require('lazy').setup({
         width = 'block',
       },
       bullet = {
-        icons = { '● ', '○ ', '◆ ', '◇ ' },
+        icons = { '●', '○', '◆', '◇' },
+        right_pad = 1,
       },
       checkbox = {
         unchecked = { icon = '󰄱 ', highlight = 'RenderMarkdownUnchecked' },
@@ -1812,6 +1764,7 @@ require('lazy').setup({
   },
   {
     '3rd/image.nvim',
+    enabled = false, -- DISABLED: conflicts with snacks.nvim image
     ft = { 'markdown', 'quarto', 'norg' },
     build = false,
     -- dependencies = {
