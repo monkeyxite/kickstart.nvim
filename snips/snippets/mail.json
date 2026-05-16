@@ -1,0 +1,42 @@
+{
+  "Best regards": {
+    "prefix": "mbr",
+    "body": ["Best regards,", "${1:John}"],
+    "description": "Best regards signature"
+  },
+  "Thanks (work)": {
+    "prefix": "mty",
+    "body": ["Thanks for the update."],
+    "description": "Thank you"
+  },
+  "Please find attached": {
+    "prefix": "mpfa",
+    "body": ["Please find attached."],
+    "description": "PFA"
+  },
+  "FYI": {
+    "prefix": "mfyi",
+    "body": ["FYI — ${1:context}."],
+    "description": "FYI note"
+  },
+  "Acknowledged": {
+    "prefix": "mack",
+    "body": ["Acknowledged, will follow up by ${1:date}."],
+    "description": "Acknowledge with deadline"
+  },
+  "Cheers": {
+    "prefix": "mch",
+    "body": ["Cheers,", "${1:John}"],
+    "description": "Cheers signature"
+  },
+  "Let me know": {
+    "prefix": "mlmk",
+    "body": ["Let me know what you think."],
+    "description": "Let me know"
+  },
+  "Signature": {
+    "prefix": "msig",
+    "body": ["Best,", "${1:John}"],
+    "description": "Short signature"
+  }
+}
